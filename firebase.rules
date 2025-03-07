@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Kullanıcı kimlik doğrulaması kontrolü
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Kullanıcının kendi verilerine erişim kontrolü
+    function isUser(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Organizasyon yöneticisi kontrolü
+    function isOrganizationManager(organizationId) {
+      let org = get(/databases/$(database)/documents/organizations/$(organizationId));
+      return org != null && org.data.managerId == request.auth.uid;
+    }
+
+    // Organizasyon üyesi kontrolü
+    function isOrganizationMember(organizationId) {
+      let org = get(/databases/$(database)/documents/organizations/$(organizationId));
+      return org != null && (
+        org.data.managerId == request.auth.uid || 
+        request.auth.uid in org.data.members
+      );
+    }
+
+    // Davetiye sahibi kontrolü
+    function isInvitationRecipient(invitationId) {
+      let invitation = get(/databases/$(database)/documents/invitations/$(invitationId));
+      return invitation != null && invitation.data.userId == request.auth.uid;
+    }
+
+    // Kullanıcılar koleksiyonu kuralları
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+
+    // Organizasyonlar koleksiyonu kuralları
+    match /organizations/{organizationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        isOrganizationManager(organizationId) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) &&
+        request.resource.data.members.hasAll(resource.data.members))
+      );
+      allow delete: if isOrganizationManager(organizationId);
+    }
+
+    // Davetiyeler koleksiyonu kuralları
+    match /invitations/{invitationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        isOrganizationManager(request.resource.data.organizationId);
+      allow update: if isAuthenticated() && (
+        isOrganizationManager(resource.data.organizationId) ||
+        isInvitationRecipient(invitationId)
+      );
+      allow delete: if isOrganizationManager(resource.data.organizationId);
+    }
+
+    // Raporlar koleksiyonu kuralları
+    match /reports/{reportId} {
+      allow read: if isAuthenticated() && (
+        isUser(resource.data.userId) ||
+        isUser(resource.data.managerId) ||
+        isOrganizationMember(resource.data.organizationId)
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        isUser(resource.data.userId) ||
+        isUser(resource.data.managerId)
+      );
+      allow delete: if isAuthenticated() && (
+        isUser(resource.data.userId) ||
+        isUser(resource.data.managerId)
+      );
+    }
+  }
+} 
