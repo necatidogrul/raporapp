@@ -31,7 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
 
         if (!user && !publicPaths.includes(pathname)) {
-          router.push("/login");
+          const loginUrl = new URL("/login", window.location.origin);
+          loginUrl.searchParams.set("callbackUrl", pathname);
+          router.replace(loginUrl.toString());
         }
       });
 

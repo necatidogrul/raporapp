@@ -225,6 +225,21 @@ export async function createOrUpdateUser(
       },
       { merge: true }
     );
+
+    // Firebase Auth token'ını alıp cookie olarak saklayalım
+    try {
+      const token = await user.getIdToken();
+
+      // Tarayıcı ortamında çalışıyorsa cookie'yi ayarla
+      if (typeof window !== "undefined") {
+        // Güvenli cookie ayarları
+        document.cookie = `__session=${token}; path=/; max-age=86400; SameSite=Strict; ${
+          window.location.protocol === "https:" ? "Secure;" : ""
+        }`;
+      }
+    } catch (tokenError) {
+      console.error("Kimlik doğrulama token'ı alınırken hata:", tokenError);
+    }
   } catch (error) {
     console.error("Kullanıcı oluşturulurken hata:", error);
     throw error;

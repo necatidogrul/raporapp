@@ -36,13 +36,46 @@ export default function LoginPage() {
       // Kullanıcı bilgilerini Firestore'a kaydet/güncelle
       await createOrUpdateUser(userCredential.user);
       toast.success("Giriş başarılı!");
-      router.push("/dashboard");
+
+      // URL'den callbackUrl parametresini al
+      const urlParams = new URLSearchParams(window.location.search);
+      const callbackUrl = urlParams.get("callbackUrl");
+
+      // Güvenli URL kontrolü - yalnızca site içi yönlendirmelere izin ver
+      const isSafeUrl =
+        callbackUrl &&
+        !callbackUrl.startsWith("http") &&
+        !callbackUrl.startsWith("//");
+
+      // Eğer güvenli bir callbackUrl varsa, oraya yönlendir, yoksa dashboard'a git
+      setTimeout(() => {
+        if (isSafeUrl) {
+          router.replace(callbackUrl);
+        } else {
+          router.replace("/dashboard");
+        }
+      }, 100); // küçük bir gecikme ekleyerek tarayıcının durumunu güncellemeye zaman tanı
     } catch (error) {
       const authError = error as AuthError;
-      const errorMessage =
-        authError.code === "auth/invalid-credential"
-          ? "E-posta veya şifre hatalı"
-          : "Giriş yapılırken bir hata oluştu";
+      let errorMessage = "Giriş yapılırken bir hata oluştu";
+
+      // Daha ayrıntılı hata mesajları
+      if (authError.code === "auth/invalid-credential") {
+        errorMessage = "E-posta veya şifre hatalı";
+      } else if (authError.code === "auth/user-not-found") {
+        errorMessage = "Bu e-posta adresi ile bir kullanıcı bulunamadı";
+      } else if (authError.code === "auth/wrong-password") {
+        errorMessage = "Hatalı şifre girdiniz";
+      } else if (authError.code === "auth/too-many-requests") {
+        errorMessage =
+          "Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin";
+      } else if (authError.code === "auth/user-disabled") {
+        errorMessage = "Bu hesap devre dışı bırakılmış";
+      } else if (authError.code === "auth/network-request-failed") {
+        errorMessage = "Ağ hatası. İnternet bağlantınızı kontrol edin";
+      }
+
+      console.error("Login error:", authError.code, authError.message);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
