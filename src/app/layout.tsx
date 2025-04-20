@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
             {children}
           </ThemeProvider>
           <Toaster />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>
