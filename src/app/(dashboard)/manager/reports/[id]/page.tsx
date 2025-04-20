@@ -1,29 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useReportStore } from "@/store/report-store";
 import { Report } from "@/types/report";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  XIcon,
-  FileTextIcon,
-  BuildingIcon,
-} from "lucide-react";
+
+import { ArrowLeftIcon, CheckIcon, XIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -51,57 +36,60 @@ export default function ManagerReportDetailPage() {
   const [managerComment, setManagerComment] = useState("");
 
   // Firebase'den doğrudan rapor verilerini al
-  const fetchReportFromFirebase = async (reportId: string) => {
-    try {
-      setLoading(true);
-      const reportRef = doc(db, "reports", reportId);
-      const reportSnap = await getDoc(reportRef);
+  const fetchReportFromFirebase = useCallback(
+    async (reportId: string) => {
+      try {
+        setLoading(true);
+        const reportRef = doc(db, "reports", reportId);
+        const reportSnap = await getDoc(reportRef);
 
-      if (reportSnap.exists()) {
-        const reportData = reportSnap.data();
+        if (reportSnap.exists()) {
+          const reportData = reportSnap.data();
 
-        // Firebase Timestamp'lerini JavaScript Date nesnelerine dönüştür
-        const processedData = {
-          ...reportData,
-          createdAt: reportData.createdAt?.toDate
-            ? reportData.createdAt.toDate()
-            : new Date(),
-          updatedAt: reportData.updatedAt?.toDate
-            ? reportData.updatedAt.toDate()
-            : new Date(),
-          submittedAt: reportData.submittedAt?.toDate
-            ? reportData.submittedAt.toDate()
-            : undefined,
-          reviewedAt: reportData.reviewedAt?.toDate
-            ? reportData.reviewedAt.toDate()
-            : undefined,
-        };
+          // Firebase Timestamp'lerini JavaScript Date nesnelerine dönüştür
+          const processedData: Partial<Report> = {
+            ...reportData,
+            createdAt: reportData.createdAt?.toDate
+              ? reportData.createdAt.toDate()
+              : new Date(),
+            updatedAt: reportData.updatedAt?.toDate
+              ? reportData.updatedAt.toDate()
+              : new Date(),
+            submittedAt: reportData.submittedAt?.toDate
+              ? reportData.submittedAt.toDate()
+              : undefined,
+            reviewedAt: reportData.reviewedAt?.toDate
+              ? reportData.reviewedAt.toDate()
+              : undefined,
+          };
 
-        // Rapor periyodu varsa onları da dönüştür
-        if (reportData.reportPeriod) {
-          processedData.startDate = reportData.reportPeriod.startDate?.toDate
-            ? reportData.reportPeriod.startDate.toDate()
-            : new Date();
-          processedData.endDate = reportData.reportPeriod.endDate?.toDate
-            ? reportData.reportPeriod.endDate.toDate()
-            : new Date();
+          // Rapor periyodu varsa onları da dönüştür
+          if (reportData.reportPeriod) {
+            processedData.startDate = reportData.reportPeriod.startDate?.toDate
+              ? reportData.reportPeriod.startDate.toDate()
+              : new Date();
+            processedData.endDate = reportData.reportPeriod.endDate?.toDate
+              ? reportData.reportPeriod.endDate.toDate()
+              : new Date();
+          }
+
+          setReport({
+            id: reportSnap.id,
+            ...processedData,
+          } as unknown as Report);
+        } else {
+          toast.error("Rapor bulunamadı");
+          router.push("/manager/reports");
         }
-
-        setReport({
-          id: reportSnap.id,
-          ...processedData,
-        } as unknown as Report);
-      } else {
-        toast.error("Rapor bulunamadı");
-        router.push("/manager/reports");
+      } catch (error) {
+        console.error("Rapor yüklenirken hata:", error);
+        toast.error("Rapor yüklenirken bir hata oluştu");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Rapor yüklenirken hata:", error);
-      toast.error("Rapor yüklenirken bir hata oluştu");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [router]
+  );
 
   useEffect(() => {
     if (params.id) {
@@ -120,7 +108,7 @@ export default function ManagerReportDetailPage() {
         }
       }
     }
-  }, [params.id, reports, router, isDirect]);
+  }, [params.id, reports, router, isDirect, fetchReportFromFirebase]);
 
   const handleBack = () => {
     router.back();
@@ -145,21 +133,6 @@ export default function ManagerReportDetailPage() {
       setShowReviewDialog(false);
       setManagerComment("");
       toast.error("Rapor reddedildi");
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "DRAFT":
-        return <Badge variant="outline">Taslak</Badge>;
-      case "SUBMITTED":
-        return <Badge variant="secondary">Gönderildi</Badge>;
-      case "APPROVED":
-        return <Badge variant="success">Onaylandı</Badge>;
-      case "REJECTED":
-        return <Badge variant="destructive">Reddedildi</Badge>;
-      default:
-        return <Badge variant="outline">Taslak</Badge>;
     }
   };
 

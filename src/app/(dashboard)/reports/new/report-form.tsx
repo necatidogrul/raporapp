@@ -104,22 +104,24 @@ export default function ReportForm() {
   }, []);
 
   // Yönetici değiştiğinde
+  const watchedManagerId = form.watch("managerId");
   useEffect(() => {
-    const managerId = form.watch("managerId");
-    if (managerId) {
-      const manager = managers.find((m) => m.id === managerId);
+    if (watchedManagerId) {
+      const manager = managers.find((m) => m.id === watchedManagerId);
       setSelectedManager(manager || null);
     }
-  }, [form.watch("managerId"), managers]);
+  }, [watchedManagerId, managers, form]);
 
   // Organizasyon değiştiğinde
+  const watchedOrganizationId = form.watch("organizationId");
   useEffect(() => {
-    const organizationId = form.watch("organizationId");
-    if (organizationId) {
-      const organization = organizations.find((o) => o.id === organizationId);
+    if (watchedOrganizationId) {
+      const organization = organizations.find(
+        (o) => o.id === watchedOrganizationId
+      );
       setSelectedOrganization(organization || null);
     }
-  }, [form.watch("organizationId"), organizations]);
+  }, [watchedOrganizationId, organizations, form]);
 
   // Form gönderme
   const onSubmit = async (values: FormValues) => {

@@ -12,7 +12,7 @@ import {
 } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Download } from "lucide-react";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -83,8 +83,9 @@ export default function ReportsPage() {
         : "Düşük",
     ]);
 
+    let lastTableY = 70;
     autoTable(doc, {
-      startY: 70,
+      startY: lastTableY,
       head: [["No", "Görev", "Durum", "Bitiş Tarihi", "Öncelik"]],
       body: allTasksList,
       theme: "striped",
@@ -92,11 +93,16 @@ export default function ReportsPage() {
         font: "Roboto",
         fontStyle: "normal",
       },
+      didDrawPage: function (data) {
+        if (data.cursor) {
+          lastTableY = data.cursor.y;
+        }
+      },
     });
 
     // Takvim Görünümü
     doc.setFontSize(16);
-    doc.text("Takvim Görünümü", 20, doc.lastAutoTable.finalY + 20);
+    doc.text("Takvim Görünümü", 20, lastTableY + 20);
 
     const currentDate = new Date();
     const monthStart = startOfMonth(currentDate);
@@ -109,15 +115,15 @@ export default function ReportsPage() {
     doc.text(
       format(currentDate, "MMMM yyyy", { locale: tr }),
       20,
-      doc.lastAutoTable.finalY + 35
+      lastTableY + 35
     );
 
     // Takvim başlıkları
     const calendarHeaders = [["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]];
 
     // Takvim verilerini haftalık olarak grupla
-    const weeks = [];
-    let currentWeek = [];
+    const weeks: string[][] = [];
+    let currentWeek: string[] = [];
 
     // Ayın ilk gününün haftanın hangi günü olduğunu bul (0: Pazar, 1: Pazartesi, ...)
     let firstDayOfMonth = monthStart.getDay();
@@ -172,7 +178,7 @@ export default function ReportsPage() {
 
     // Takvimi çiz
     autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 40,
+      startY: lastTableY + 40,
       head: calendarHeaders,
       body: weeks,
       theme: "grid",

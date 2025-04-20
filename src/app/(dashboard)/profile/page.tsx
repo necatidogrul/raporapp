@@ -52,7 +52,7 @@ export default function ProfilePage() {
         } else {
           router.push("/login");
         }
-      } catch (error) {
+      } catch {
         toast.error("Profil bilgileri yüklenirken hata oluştu");
       } finally {
         setLoading(false);
@@ -84,7 +84,7 @@ export default function ProfilePage() {
       });
 
       toast.success("Profil bilgileri güncellendi");
-    } catch (error) {
+    } catch {
       toast.error("Profil güncellenirken hata oluştu");
     } finally {
       setLoading(false);

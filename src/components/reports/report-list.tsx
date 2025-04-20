@@ -13,13 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import {
-  FileTextIcon,
-  SendIcon,
-  EditIcon,
-  EyeIcon,
-  BuildingIcon,
-} from "lucide-react";
+import { SendIcon, EditIcon, EyeIcon, BuildingIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ReportDialog } from "./report-dialog";
@@ -73,8 +67,8 @@ export function ReportList() {
       {reports.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
-            Henüz rapor oluşturmadınız. Yeni bir rapor oluşturmak için "Yeni
-            Rapor" butonuna tıklayın.
+            Henüz rapor oluşturmadınız. Yeni bir rapor oluşturmak için
+            &quot;Yeni Rapor&quot; butonuna tıklayın.
           </CardContent>
         </Card>
       ) : (

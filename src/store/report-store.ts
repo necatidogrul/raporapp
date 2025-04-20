@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { Report, ReportStatus } from "@/types/report";
 import { Task } from "@/types/task";
@@ -154,33 +155,20 @@ async function createNewReportInFirebase(report: Report) {
   }
 }
 
-// Firebase'de raporu güncelleme fonksiyonu
-async function updateReportInFirebase(reportId: string, updatedData: any) {
+const updateReportInFirebase = async (reportId: string, updatedData: any) => {
   try {
-    if (!reportId) {
-      console.error("Firebase ID bulunamadı, güncelleme yapılamıyor");
-      return;
-    }
-
-    console.log(
-      "Rapor Firebase'de güncelleniyor, ID:",
-      reportId,
-      "Veri:",
-      updatedData
-    );
-
     const reportRef = doc(db, "reports", reportId);
-    await updateDoc(reportRef, {
+    const dataToUpdate = {
       ...updatedData,
-      updatedAt: Timestamp.fromDate(new Date()),
-    });
-
-    console.log("Rapor Firebase'de başarıyla güncellendi");
+      updatedAt: Timestamp.now().toDate(),
+    };
+    await updateDoc(reportRef, dataToUpdate);
+    return true;
   } catch (error) {
-    console.error("Rapor Firebase'de güncellenirken hata:", error);
-    throw error;
+    console.error("Error updating report:", error);
+    return false;
   }
-}
+};
 
 // Firebase'den raporu silme fonksiyonu
 async function deleteReportFromFirebase(reportId: string) {
@@ -254,27 +242,7 @@ export const useReportStore = create<ReportState>((set, get) => ({
     // Eğer Firebase ID varsa, Firebase'i de güncelle
     if (report?.firebaseId) {
       try {
-        // Firebase için veriyi hazırla
-        const firebaseData = { ...updatedReport };
-
-        // Date tipindeki alanları Timestamp'e çevir
-        if (firebaseData.startDate) {
-          firebaseData.reportPeriod = {
-            ...(report.reportPeriod || {}),
-            startDate: Timestamp.fromDate(firebaseData.startDate),
-          };
-          delete firebaseData.startDate;
-        }
-
-        if (firebaseData.endDate) {
-          firebaseData.reportPeriod = {
-            ...(firebaseData.reportPeriod || report.reportPeriod || {}),
-            endDate: Timestamp.fromDate(firebaseData.endDate),
-          };
-          delete firebaseData.endDate;
-        }
-
-        await updateReportInFirebase(report.firebaseId, firebaseData);
+        await updateReportInFirebase(report.firebaseId, updatedReport);
       } catch (error) {
         console.error("Rapor güncellenirken hata:", error);
       }

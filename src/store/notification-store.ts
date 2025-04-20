@@ -1,6 +1,9 @@
 import { create } from "zustand";
-import { Notification, NotificationStore } from "@/types/notification";
-import { v4 as uuidv4 } from "uuid";
+import {
+  Notification,
+  NotificationStore,
+  NotificationStatus,
+} from "@/types/notification";
 import {
   collection,
   addDoc,
@@ -19,7 +22,7 @@ import { toast } from "sonner";
 // Firebase'e bildirim ekle
 async function addNotificationToFirebase(notification: Notification) {
   try {
-    // ID alanını dahil etme, Firestore otomatik ID oluşturacak
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...notificationWithoutId } = notification;
 
     const notificationData = {
@@ -35,7 +38,6 @@ async function addNotificationToFirebase(notification: Notification) {
       notificationData
     );
 
-    // ID güncelleme işlemini kaldırdık, doğrudan ID'yi döndürüyoruz
     return docRef.id;
   } catch (error) {
     console.error("Bildirim eklenirken hata oluştu:", error);
@@ -58,7 +60,7 @@ async function markNotificationAsReadInFirebase(id: string) {
   try {
     const notificationRef = doc(db, "notifications", id);
     await updateDoc(notificationRef, {
-      status: "READ",
+      status: "READ" as NotificationStatus,
       readAt: Timestamp.fromDate(new Date()),
     });
   } catch (error) {
@@ -70,7 +72,6 @@ async function markNotificationAsReadInFirebase(id: string) {
 // Firebase'de tüm bildirimleri okundu olarak işaretle
 async function markAllNotificationsAsReadInFirebase(userId: string) {
   try {
-    // Kullanıcının okunmamış bildirimlerini bul
     const notificationsQuery = query(
       collection(db, "notifications"),
       where("userId", "==", userId),
@@ -80,12 +81,12 @@ async function markAllNotificationsAsReadInFirebase(userId: string) {
     const querySnapshot = await getDocs(notificationsQuery);
 
     // Her birini güncelle
-    const batch = [];
+    const batch: Promise<void>[] = [];
     querySnapshot.forEach((document) => {
       const notificationRef = doc(db, "notifications", document.id);
       batch.push(
         updateDoc(notificationRef, {
-          status: "READ",
+          status: "READ" as NotificationStatus,
           readAt: Timestamp.fromDate(new Date()),
         })
       );
@@ -141,7 +142,7 @@ export async function fetchUserNotifications(userId: string) {
   }
 }
 
-export const useNotificationStore = create<NotificationStore>((set, get) => ({
+export const useNotificationStore = create<NotificationStore>((set) => ({
   notifications: [],
   unreadCount: 0,
 
@@ -186,7 +187,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
         notification.id === id
           ? {
               ...notification,
-              status: "READ",
+              status: "READ" as NotificationStatus,
               readAt: new Date(),
             }
           : notification
@@ -213,7 +214,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     set((state) => ({
       notifications: state.notifications.map((notification) => ({
         ...notification,
-        status: "READ",
+        status: "READ" as NotificationStatus,
         readAt: notification.readAt || new Date(),
       })),
       unreadCount: 0,

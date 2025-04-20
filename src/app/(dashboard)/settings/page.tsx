@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { auth } from "@/lib/firebase";
@@ -19,17 +19,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import {
-  Moon,
-  Sun,
-  Monitor,
-  LogOut,
-  BellRing,
-  Mail,
-  Lock,
-  Shield,
-  Languages,
-} from "lucide-react";
+import { Moon, Sun, Monitor, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -67,7 +57,7 @@ export default function SettingsPage() {
       setLoading(true);
       await signOut(auth);
       router.push("/login");
-    } catch (error) {
+    } catch {
       toast.error("Çıkış yapılırken bir hata oluştu");
     } finally {
       setLoading(false);

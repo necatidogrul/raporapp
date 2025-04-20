@@ -1,7 +1,6 @@
 "use client";
 
 import { useTaskStore } from "@/store/task-store";
-import { TaskCard } from "./task-card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -9,7 +8,6 @@ import {
   CheckCircle2Icon,
   CircleDotIcon,
   ClockIcon,
-  AlertTriangleIcon,
   PencilIcon,
   TrashIcon,
 } from "lucide-react";

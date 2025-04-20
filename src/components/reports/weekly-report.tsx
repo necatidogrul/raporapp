@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useTaskStore } from "@/store/task-store";
 import { Task } from "@/types/task";
@@ -34,6 +34,11 @@ export function WeeklyReport() {
   const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getWeekEndDate = useCallback((weekNumber: number) => {
+    const startDate = getWeekStartDate(weekNumber);
+    return new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
 
@@ -53,13 +58,16 @@ export function WeeklyReport() {
         endDate: getWeekEndDate(currentWeekNumber),
         organizationId: completedTasks[0]?.organizationId || "",
         userId: user.uid,
-        tasks: completedTasks,
+        tasks: completedTasks.map((task) => ({
+          ...task,
+          weeklyReport: false,
+        })),
         status: "DRAFT",
       };
 
       setReport(weeklyReport);
     }
-  }, [tasks, user]);
+  }, [tasks, user, getWeekEndDate]);
 
   const getCurrentWeekNumber = () => {
     const now = new Date();
@@ -75,11 +83,6 @@ export function WeeklyReport() {
     return new Date(
       start.getTime() + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
     );
-  };
-
-  const getWeekEndDate = (weekNumber: number) => {
-    const startDate = getWeekStartDate(weekNumber);
-    return new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
   };
 
   const handleNoteChange = (taskId: string, note: string) => {
@@ -214,7 +217,7 @@ export function WeeklyReport() {
               <p className="text-sm text-muted-foreground mb-4">
                 {task.description}
               </p>
-              <div className="text-sm mb-4">
+              <div className="text-sm space-y-2">
                 <p>
                   <strong>Başlangıç:</strong>{" "}
                   {format(task.startDate, "d MMMM yyyy", { locale: tr })}
@@ -223,21 +226,16 @@ export function WeeklyReport() {
                   <strong>Bitiş:</strong>{" "}
                   {format(task.endDate, "d MMMM yyyy", { locale: tr })}
                 </p>
-              </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor={`note-${task.id}`}
-                  className="text-sm font-medium"
-                >
-                  Task ile ilgili notlar:
-                </label>
-                <Textarea
-                  id={`note-${task.id}`}
-                  value={taskNotes[task.id] || ""}
-                  onChange={(e) => handleNoteChange(task.id, e.target.value)}
-                  placeholder="Bu task ile ilgili notlarınızı ekleyin..."
-                  className="min-h-[100px]"
-                />
+                <div className="space-y-2">
+                  <p>
+                    <strong>Notlar:</strong>
+                  </p>
+                  <Textarea
+                    placeholder="Task ile ilgili notlarınızı buraya ekleyin..."
+                    value={taskNotes[task.id] || ""}
+                    onChange={(e) => handleNoteChange(task.id, e.target.value)}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

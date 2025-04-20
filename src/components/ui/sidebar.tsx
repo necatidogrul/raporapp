@@ -5,14 +5,11 @@ import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  ClipboardList,
   Calendar,
   Inbox,
-  Users,
   Building2,
   Mail,
   Settings,
-  BarChart3,
   FileText,
   FileBarChart,
   User,
@@ -26,9 +23,17 @@ import {
   checkAndPromoteOrganizationManagers,
 } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
-import { toast } from "sonner";
 
-const menuItems = [
+type MenuItem = {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  forAll?: boolean;
+  onlyManager?: boolean;
+  group: string;
+};
+
+const menuItems: MenuItem[] = [
   // Ana menü öğeleri
   {
     title: "Dashboard",
@@ -129,9 +134,10 @@ export function Sidebar() {
         if (auth.currentUser) {
           const userData = await getUserData(auth.currentUser.uid);
 
-          if (userData?.role !== "manager") {
+          const isUserManager = userData?.role === "manager";
+          if (!isUserManager) {
             const isPromoted = await checkAndPromoteOrganizationManagers();
-            setIsManager(isPromoted || userData?.role === "manager");
+            setIsManager(isPromoted || false);
           } else {
             setIsManager(true);
           }
@@ -155,8 +161,8 @@ export function Sidebar() {
   const orgItems = menuItems.filter((item) => item.group === "organization");
   const settingsItems = menuItems.filter((item) => item.group === "settings");
 
-  const renderMenuGroup = (items) => {
-    return items.map((item) => {
+  const renderMenuGroup = (items: MenuItem[]) => {
+    return items.map((item: MenuItem) => {
       // Sadece yöneticilere özel menü itemlarını kontrol et
       if (item.onlyManager && !isManager) return null;
       // Herkes için olan menü itemlarını göster

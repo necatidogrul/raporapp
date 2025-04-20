@@ -31,12 +31,15 @@ const priorityLabels = {
 };
 
 const statusColors = {
+  PENDING:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-100",
   IN_PROGRESS: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100",
   COMPLETED:
     "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100",
 };
 
 const statusLabels = {
+  PENDING: "Beklemede",
   IN_PROGRESS: "Devam Ediyor",
   COMPLETED: "Tamamlandı",
 };

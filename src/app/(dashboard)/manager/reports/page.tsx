@@ -27,8 +27,9 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getManagerReports } from "@/lib/firebase-utils";
+import type { Report as FirebaseReport } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
-import { Report } from "@/types/report";
+import type { Report } from "@/types/report";
 
 export default function ManagerReportsPage() {
   const reports = useReportStore((state) => state.reports);
@@ -58,31 +59,34 @@ export default function ManagerReportsPage() {
         console.log("Bulunan rapor sayısı:", reportList.length);
 
         // Firebase'den alınan verileri uygun formata dönüştür
-        const formattedReports = reportList.map((doc) => {
+        const formattedReports = reportList.map((doc: FirebaseReport) => {
           return {
             id: doc.id,
             firebaseId: doc.id,
             userId: doc.userId,
             userName: doc.userName,
             managerId: doc.managerId,
-            managerName: doc.managerName,
+            managerName: doc.managerName || "",
             organizationId: doc.organizationId,
             organizationName: doc.organizationName || "",
             title: doc.title || "",
             description: doc.description || doc.content || "",
-            content: doc.content || "",
             startDate: doc.reportPeriod?.startDate?.toDate() || new Date(),
             endDate: doc.reportPeriod?.endDate?.toDate() || new Date(),
             status:
               doc.status === "UNREAD" || doc.status === "READ"
                 ? "SUBMITTED"
-                : doc.status || "DRAFT",
+                : (doc.status as
+                    | "DRAFT"
+                    | "SUBMITTED"
+                    | "APPROVED"
+                    | "REJECTED") || "DRAFT",
             tasks: doc.tasks || [],
             createdAt: doc.createdAt?.toDate() || new Date(),
             updatedAt: doc.updatedAt?.toDate() || new Date(),
             submittedAt: doc.submittedAt?.toDate(),
             reviewedAt: doc.reviewedAt?.toDate(),
-            managerComment: doc.managerComment,
+            managerComment: doc.managerComment || "",
           } as Report;
         });
 

@@ -15,6 +15,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { User } from "firebase/auth";
+import { Task } from "@/types/task";
 
 // Rapor tipi
 export interface Report {
@@ -22,11 +23,20 @@ export interface Report {
   userId: string;
   userName: string;
   managerId: string;
-  content: string;
-  status: "READ" | "UNREAD";
-  createdAt: Timestamp;
-  readAt?: Timestamp;
+  managerName?: string;
   organizationId: string;
+  organizationName?: string;
+  title?: string;
+  description?: string;
+  content: string;
+  status: "READ" | "UNREAD" | "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+  readAt?: Timestamp;
+  submittedAt?: Timestamp;
+  reviewedAt?: Timestamp;
+  managerComment?: string;
+  tasks?: Task[];
   reportType: "DAILY" | "WEEKLY" | "MONTHLY";
   reportPeriod: {
     startDate: Timestamp;

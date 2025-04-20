@@ -12,6 +12,7 @@ export interface Report {
   organizationName: string;
   title: string;
   description: string;
+  content?: string;
   startDate: Date;
   endDate: Date;
   status: ReportStatus;

@@ -1,14 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Check, X } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Report } from "@/types/report";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 interface ReportFormatterProps {
@@ -20,17 +19,14 @@ export function ReportFormatter({
   report,
   showControls = true,
 }: ReportFormatterProps) {
-  const [fontLoaded, setFontLoaded] = useState(false);
-
   // Font kullanımını düzenleme - hata çözümü
   useEffect(() => {
-    // Varsayılan fontları kullanacağımız için sadece başlangıç durumunu belirle
-    setFontLoaded(true);
+    // Varsayılan fontları kullanacağımız için bir şey yapmamıza gerek yok
   }, []);
 
   // Markdown içeriği hazırla
   const getFormattedContent = () => {
-    const content = report.content || report.description || "";
+    const content = report.description || "";
 
     if (content.includes("##")) {
       // İçerik zaten markdown formatında, olduğu gibi döndür
@@ -39,7 +35,7 @@ export function ReportFormatter({
 
     // Metin basit formatta ise, basit bir markdown dönüşümü yap
     const lines = content.split("\n");
-    return lines.map((line) => line.trim()).join("\n\n");
+    return lines.map((line: string) => line.trim()).join("\n\n");
   };
 
   // PDF'e aktar
@@ -298,7 +294,7 @@ export function ReportFormatter({
         doc.text("Yonetici Notu", 15, 20);
 
         // Yorum kutusu için arkaplan
-        let commentY = 40;
+        const commentY = 40;
 
         // Standart renklendirme
         doc.setFillColor(243, 244, 246); // bg-gray-100
@@ -310,7 +306,7 @@ export function ReportFormatter({
         doc.setFontSize(11);
 
         // Yorum metnini Türkçe karakterleri değiştirerek hazırla
-        let managerComment = report.managerComment
+        const managerComment = report.managerComment
           .replace(/ç/g, "c")
           .replace(/Ç/g, "C")
           .replace(/ğ/g, "g")

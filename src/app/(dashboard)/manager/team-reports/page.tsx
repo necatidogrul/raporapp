@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { auth } from "@/lib/firebase";
 import {
   getUserOrganizations,
@@ -35,9 +35,7 @@ import {
   AlertTriangleIcon,
   CalendarIcon,
   RefreshCw,
-  BarChart3Icon,
   UsersIcon,
-  ClipboardListIcon,
   ChevronRightIcon,
   ChevronLeftIcon,
 } from "lucide-react";
@@ -49,10 +47,8 @@ import {
   isWithinInterval,
   subDays,
   addDays,
-  isFriday,
   previousFriday,
   nextFriday,
-  isBefore,
 } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
@@ -81,6 +77,40 @@ export default function TeamReportsPage() {
     pendingThisWeek: 0,
     completionRate: 0,
   });
+
+  // İstatistikleri hesapla
+  const calculateStats = useCallback(
+    (members: UserData[], reports: Report[]) => {
+      const totalMembers = members.length;
+      const totalReports = reports.length;
+
+      // Bu haftanın başlangıç ve bitiş tarihleri
+      const weekStart = startOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazartesi
+      const weekEnd = endOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazar
+
+      // Bu hafta gönderilen raporlar
+      const thisWeekReports = reports.filter((report) => {
+        if (!report.createdAt) return false;
+
+        const reportDate = report.createdAt.toDate();
+        return isWithinInterval(reportDate, { start: weekStart, end: weekEnd });
+      });
+
+      const submittedThisWeek = thisWeekReports.length;
+      const pendingThisWeek = totalMembers - submittedThisWeek;
+      const completionRate =
+        totalMembers > 0 ? (submittedThisWeek / totalMembers) * 100 : 0;
+
+      setStats({
+        totalMembers,
+        totalReports,
+        submittedThisWeek,
+        pendingThisWeek,
+        completionRate,
+      });
+    },
+    [currentWeekDate]
+  );
 
   // Firebase bağlantısını kontrol et
   useEffect(() => {
@@ -160,7 +190,7 @@ export default function TeamReportsPage() {
     };
 
     loadOrganizations();
-  }, []);
+  }, [selectedOrg]);
 
   // Seçili organizasyonun üyelerini ve raporlarını yükle
   useEffect(() => {
@@ -217,38 +247,7 @@ export default function TeamReportsPage() {
     };
 
     loadMembersAndReports();
-  }, [selectedOrg]);
-
-  // İstatistikleri hesapla
-  const calculateStats = (members: UserData[], reports: Report[]) => {
-    const totalMembers = members.length;
-    const totalReports = reports.length;
-
-    // Bu haftanın başlangıç ve bitiş tarihleri
-    const weekStart = startOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazartesi
-    const weekEnd = endOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazar
-
-    // Bu hafta gönderilen raporlar
-    const thisWeekReports = reports.filter((report) => {
-      if (!report.createdAt) return false;
-
-      const reportDate = report.createdAt.toDate();
-      return isWithinInterval(reportDate, { start: weekStart, end: weekEnd });
-    });
-
-    const submittedThisWeek = thisWeekReports.length;
-    const pendingThisWeek = totalMembers - submittedThisWeek;
-    const completionRate =
-      totalMembers > 0 ? (submittedThisWeek / totalMembers) * 100 : 0;
-
-    setStats({
-      totalMembers,
-      totalReports,
-      submittedThisWeek,
-      pendingThisWeek,
-      completionRate,
-    });
-  };
+  }, [selectedOrg, calculateStats]);
 
   const handleRefresh = async () => {
     if (!selectedOrg || !auth.currentUser) return;

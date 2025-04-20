@@ -2,7 +2,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowDownToLine, Eye, Check } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 export type Report = {
   id: string;
@@ -22,7 +23,10 @@ export const columns: ColumnDef<Report>[] = [
   {
     accessorKey: "createdAt",
     header: "Tarih",
-    cell: ({ row }) => formatDate(row.getValue("createdAt")),
+    cell: ({ row }) =>
+      format(new Date(row.getValue("createdAt")), "d MMMM yyyy HH:mm", {
+        locale: tr,
+      }),
   },
   {
     accessorKey: "status",

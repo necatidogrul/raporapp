@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import {
@@ -31,12 +31,11 @@ import {
   AlertTriangleIcon,
   CalendarIcon,
   RefreshCw,
-  BarChart3Icon,
   UsersIcon,
-  ClipboardListIcon,
   ArrowLeftIcon,
   BuildingIcon,
   Users,
+  ClipboardListIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -44,12 +43,6 @@ import {
   startOfWeek,
   endOfWeek,
   isWithinInterval,
-  subDays,
-  addDays,
-  isFriday,
-  previousFriday,
-  nextFriday,
-  isBefore,
   subWeeks,
   addWeeks,
 } from "date-fns";
@@ -67,12 +60,33 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
+// Report tipini genişlet
+interface ExtendedReport extends Omit<Report, "tasks"> {
+  tasks?: Array<{
+    id?: string;
+    title: string;
+    completed: boolean;
+    endDate?: string;
+  }>;
+}
+
+// Raporu ExtendedReport'a dönüştüren yardımcı fonksiyon
+const convertToExtendedReport = (report: Report): ExtendedReport => ({
+  ...report,
+  tasks: report.tasks?.map((task) => ({
+    id: task.id,
+    title: task.title,
+    completed: task.status === "COMPLETED",
+    endDate: task.endDate?.toISOString(),
+  })),
+});
+
 export default function OrganizationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<UserData[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
+  const [reports, setReports] = useState<ExtendedReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentWeekDate, setCurrentWeekDate] = useState<Date>(new Date());
@@ -88,6 +102,41 @@ export default function OrganizationDetailPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isInviting, setIsInviting] = useState(false);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+
+  // İstatistikleri hesapla
+  const calculateStats = useCallback(
+    (members: UserData[], reports: ExtendedReport[]) => {
+      const totalMembers = members.length;
+      const totalReports = reports.length;
+
+      // Bu haftanın başlangıç ve bitiş tarihleri
+      const weekStart = startOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazartesi
+      const weekEnd = endOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazar
+
+      // Bu hafta gönderilen raporlar
+      const thisWeekReports = reports.filter((report) => {
+        if (!report.createdAt) return false;
+
+        const reportDate = report.createdAt.toDate();
+        return isWithinInterval(reportDate, { start: weekStart, end: weekEnd });
+      });
+
+      const submittedThisWeek = thisWeekReports.length;
+      const pendingThisWeek =
+        totalMembers > 0 ? totalMembers - submittedThisWeek : 0;
+      const completionRate =
+        totalMembers > 0 ? (submittedThisWeek / totalMembers) * 100 : 0;
+
+      setStats({
+        totalMembers,
+        totalReports,
+        submittedThisWeek,
+        pendingThisWeek,
+        completionRate,
+      });
+    },
+    [currentWeekDate]
+  );
 
   // Organizasyon ve verileri yükle
   useEffect(() => {
@@ -127,12 +176,11 @@ export default function OrganizationDetailPage() {
             if (user.uid === orgData.managerId) {
               const reportList = await getManagerReports(user.uid);
               // Sadece bu organizasyona ait raporları filtrele
-              const orgReports = reportList.filter(
-                (report) => report.organizationId === params.id
-              );
-              setReports(orgReports);
+              const orgReports = reportList
+                .filter((report) => report.organizationId === params.id)
+                .map(convertToExtendedReport);
 
-              // İstatistikleri hesapla
+              setReports(orgReports);
               calculateStats(memberList, orgReports);
 
               // Davetiyeleri getir
@@ -162,39 +210,7 @@ export default function OrganizationDetailPage() {
     };
 
     loadOrganizationData();
-  }, [params.id, router]);
-
-  // İstatistikleri hesapla
-  const calculateStats = (members: UserData[], reports: Report[]) => {
-    const totalMembers = members.length;
-    const totalReports = reports.length;
-
-    // Bu haftanın başlangıç ve bitiş tarihleri
-    const weekStart = startOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazartesi
-    const weekEnd = endOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Pazar
-
-    // Bu hafta gönderilen raporlar
-    const thisWeekReports = reports.filter((report) => {
-      if (!report.createdAt) return false;
-
-      const reportDate = report.createdAt.toDate();
-      return isWithinInterval(reportDate, { start: weekStart, end: weekEnd });
-    });
-
-    const submittedThisWeek = thisWeekReports.length;
-    const pendingThisWeek =
-      totalMembers > 0 ? totalMembers - submittedThisWeek : 0;
-    const completionRate =
-      totalMembers > 0 ? (submittedThisWeek / totalMembers) * 100 : 0;
-
-    setStats({
-      totalMembers,
-      totalReports,
-      submittedThisWeek,
-      pendingThisWeek,
-      completionRate,
-    });
-  };
+  }, [params.id, router, calculateStats]);
 
   const handleRefresh = async () => {
     if (!organization || !auth.currentUser) return;
@@ -207,13 +223,12 @@ export default function OrganizationDetailPage() {
 
       // Raporları yükle
       const reportList = await getManagerReports(auth.currentUser.uid);
-      // Sadece bu organizasyona ait raporları filtrele
-      const orgReports = reportList.filter(
-        (report) => report.organizationId === organization.id
-      );
-      setReports(orgReports);
+      // Sadece bu organizasyona ait raporları filtrele ve dönüştür
+      const orgReports = reportList
+        .filter((report) => report.organizationId === organization.id)
+        .map(convertToExtendedReport);
 
-      // İstatistikleri hesapla
+      setReports(orgReports);
       calculateStats(memberList, orgReports);
 
       toast.success("Veriler yenilendi");
@@ -750,10 +765,15 @@ export default function OrganizationDetailPage() {
                                 {report.content || report.description ? (
                                   <p className="whitespace-pre-line">
                                     {(
-                                      report.content || report.description
+                                      report.content ||
+                                      report.description ||
+                                      ""
                                     ).substring(0, 150)}
-                                    {(report.content || report.description)
-                                      .length > 150
+                                    {(
+                                      report.content ||
+                                      report.description ||
+                                      ""
+                                    ).length > 150
                                       ? "..."
                                       : ""}
                                   </p>

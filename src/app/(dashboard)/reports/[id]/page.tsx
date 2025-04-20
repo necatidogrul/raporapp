@@ -5,24 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useReportStore } from "@/store/report-store";
 import { Report } from "@/types/report";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
-import {
-  ArrowLeftIcon,
-  SendIcon,
-  EditIcon,
-  FileTextIcon,
-  BuildingIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, SendIcon, EditIcon } from "lucide-react";
 import { ReportDialog } from "@/components/reports/report-dialog";
 import { toast } from "sonner";
 import { ReportFormatter } from "@/components/reports/report-formatter";
@@ -78,21 +61,6 @@ export default function ReportDetailPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "DRAFT":
-        return <Badge variant="outline">Taslak</Badge>;
-      case "SUBMITTED":
-        return <Badge variant="secondary">Gönderildi</Badge>;
-      case "APPROVED":
-        return <Badge variant="success">Onaylandı</Badge>;
-      case "REJECTED":
-        return <Badge variant="destructive">Reddedildi</Badge>;
-      default:
-        return <Badge variant="outline">Taslak</Badge>;
-    }
-  };
-
   if (!report) {
     return (
       <div className="p-6">
@@ -139,7 +107,7 @@ export default function ReportDetailPage() {
 
       {showEditDialog && (
         <ReportDialog
-          report={report}
+          reportId={report.id}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
         />

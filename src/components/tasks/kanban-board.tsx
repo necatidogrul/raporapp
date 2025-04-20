@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Task, TaskStatus } from "@/types/task";
+import { TaskStatus } from "@/types/task";
 import { useTaskStore } from "@/store/task-store";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Button } from "@/components/ui/button";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 import { TaskCard } from "./task-card";
-import { PlusIcon } from "lucide-react";
 
 const columns: { id: TaskStatus; title: string }[] = [
   { id: "PENDING", title: "Bekleyen" },
@@ -22,7 +24,7 @@ export function KanbanBoard({ hideHeader = false }: KanbanBoardProps) {
   const tasks = useTaskStore((state) => state.tasks);
   const updateTask = useTaskStore((state) => state.updateTask);
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const { draggableId, destination } = result;

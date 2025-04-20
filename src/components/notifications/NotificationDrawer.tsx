@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { BellRing } from "lucide-react";
 import { NotificationList } from "./NotificationList";
 import { useNotificationStore } from "@/store/notification-store";
-import { auth } from "@/lib/firebase";
 
 export function NotificationDrawer() {
   const [open, setOpen] = React.useState(false);
