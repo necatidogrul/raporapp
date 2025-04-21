@@ -74,5 +74,24 @@ service cloud.firestore {
         isOrgManager(resource.data.organizationId)
       );
     }
+    
+    // Bildirimler koleksiyonu
+    match /notifications/{notificationId} {
+      // Bir kullanıcı sadece kendi bildirimlerini okuyabilir
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Herhangi bir kimlik doğrulanmış kullanıcı bildirim oluşturabilir
+      allow create: if isAuthenticated();
+      
+      // Bir kullanıcı kendi bildirimlerini veya kendi oluşturduğu bildirimleri güncelleyebilir
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.senderUserId == request.auth.uid ||
+        request.resource.data.senderUserId == request.auth.uid
+      );
+      
+      // Bir kullanıcı sadece kendi bildirimlerini silebilir
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
   }
 }
