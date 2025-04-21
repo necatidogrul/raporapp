@@ -10,7 +10,6 @@ import {
   Zap,
   Shield,
   Star,
-  ChevronRight,
   Play,
   ArrowUpRight,
   Sparkles,
