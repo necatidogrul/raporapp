@@ -13,7 +13,7 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.firebase.com https://*.googleapis.com https://*.gstatic.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.vercel.app https://*.netlify.app",
               "img-src 'self' data: https://*.googleapis.com https://*.gstatic.com https://*.firebase.com https://*.firebasestorage.app blob:",
               "font-src 'self' data: https://fonts.gstatic.com",
               "connect-src 'self' https://*.firebase.com https://*.firebaseio.com https://*.googleapis.com https://*.firebasestorage.app wss://*.firebaseio.com",
@@ -52,4 +52,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig; 
+export default nextConfig;
