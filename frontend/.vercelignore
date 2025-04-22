@@ -1,0 +1,4 @@
+# Vercel tarafından görmezden gelinecek dosyalar
+.next
+node_modules
+next.config.ts 
