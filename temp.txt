@@ -1,0 +1,5 @@
+30a0224 feat: added analytics
+7730205 style: landing page style changed
+0c89a11 feat: speed insights added
+fae41c7 fix: build errors fixed
+4f147d3 package-lock.json güncellendi
