@@ -51,9 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]); // Bu effect kullanıcı, yükleme durumu veya yol değiştiğinde çalışsın
 
-  // Yükleme sırasında boş içerik veya bir yükleniyor göstergesi döndür
-  // Bu, ilk render sırasında yönlendirme yapmadan önce içeriğin kısa süreliğine görünmesini engeller
+  // Anasayfa için yükleme göstergesini gösterme
   if (loading) {
+    const isRoot = pathname === "/";
+    if (isRoot) {
+      return <>{children}</>;
+    }
     return <Loader className="h-screen" text="" />;
   }
 
