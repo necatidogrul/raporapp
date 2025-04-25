@@ -15,7 +15,6 @@ import {
   User,
   UserPlus,
   ListChecks,
-  MenuIcon,
   X,
 } from "lucide-react";
 import { useEffect, useState, createContext, useContext } from "react";
@@ -25,12 +24,7 @@ import {
   checkAndPromoteOrganizationManagers,
 } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 // Sidebar Context oluşturma
 type SidebarContextType = {

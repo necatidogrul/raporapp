@@ -34,7 +34,6 @@ export function Navbar() {
   const [userName, setUserName] = useState<string>("");
   const [userInitials, setUserInitials] = useState<string>("");
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {

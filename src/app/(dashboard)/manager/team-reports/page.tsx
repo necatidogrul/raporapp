@@ -70,7 +70,6 @@ export default function TeamReportsPage() {
   const [currentWeekDate, setCurrentWeekDate] = useState<Date>(
     previousFriday(new Date())
   );
-  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalMembers: 0,
     totalReports: 0,
@@ -117,9 +116,7 @@ export default function TeamReportsPage() {
   useEffect(() => {
     const checkFirebaseConnection = async () => {
       try {
-
         if (!auth.currentUser) {
-          
           router.push("/login");
           return;
         }
@@ -129,19 +126,19 @@ export default function TeamReportsPage() {
           const userData = await getUserData(auth.currentUser.uid);
 
           if (userData?.role !== "manager") {
-            setError("Bu sayfaya erişmek için yönetici olmanız gerekiyor");
+            toast.error("Bu sayfaya erişmek için yönetici olmanız gerekiyor");
             setLoading(false);
             return;
           }
         } catch (userError) {
           console.error("Kullanıcı verileri alınırken hata:", userError);
-          setError("Kullanıcı bilgileri alınamadı");
+          toast.error("Kullanıcı bilgileri alınamadı");
           setLoading(false);
           return;
         }
       } catch (error) {
         console.error("Firebase bağlantısı kontrol edilirken hata:", error);
-        setError("Firebase bağlantısı kurulamadı");
+        toast.error("Firebase bağlantısı kurulamadı");
         setLoading(false);
       }
     };
@@ -192,7 +189,6 @@ export default function TeamReportsPage() {
     const loadMembersAndReports = async () => {
       setLoading(true);
       try {
-
         // Üyeleri yükle
         const memberList = await getOrganizationMembers(selectedOrg);
 
@@ -215,7 +211,6 @@ export default function TeamReportsPage() {
           // İstatistikleri hesapla
           calculateStats(filteredMembers, orgReports);
         } else {
-          
         }
       } catch (error) {
         console.error("Veriler yüklenirken hata:", error);
@@ -311,7 +306,7 @@ export default function TeamReportsPage() {
 
       const report = memberReports[0];
       return { status: report.status, report };
-    } catch (error) {
+    } catch {
       return { status: "NOT_SUBMITTED", report: null };
     }
   };
@@ -366,18 +361,6 @@ export default function TeamReportsPage() {
       { locale: tr }
     )}`;
   };
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6 text-center text-red-500">
-            <p>{error}</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (loading) {
     return <Loader className="p-6" />;
