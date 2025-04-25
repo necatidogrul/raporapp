@@ -90,7 +90,6 @@ export async function createReport(data: {
   content: string;
 }) {
   try {
-    console.log("Rapor oluşturuluyor:", data);
 
     // Kullanıcı kontrolü
     if (!auth.currentUser) {
@@ -138,7 +137,6 @@ export async function createReport(data: {
       },
     };
 
-    console.log("Oluşturulacak rapor verisi:", reportData);
 
     const docRef = await addDoc(collection(db, "reports"), reportData);
 
@@ -147,7 +145,6 @@ export async function createReport(data: {
       id: docRef.id,
     });
 
-    console.log("Rapor başarıyla oluşturuldu, ID:", docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("Rapor oluşturulurken hata:", error);
@@ -158,7 +155,6 @@ export async function createReport(data: {
 // Yöneticiye ait raporları getirme
 export async function getManagerReports(managerId: string) {
   try {
-    console.log("Yönetici raporları getiriliyor, managerId:", managerId);
 
     // Tüm raporları getir (hem UNREAD hem de READ olanları)
     const q = query(
@@ -168,11 +164,9 @@ export async function getManagerReports(managerId: string) {
     );
 
     const querySnapshot = await getDocs(q);
-    console.log("Bulunan rapor sayısı:", querySnapshot.size);
 
     const reports = querySnapshot.docs.map((doc) => {
       const data = doc.data();
-      console.log("Rapor verisi:", data);
       return {
         id: doc.id,
         ...data,
@@ -480,7 +474,6 @@ export async function sendInvitation(data: {
         // Zustand store'a erişim
         const addNotification = useNotificationStore.getState().addNotification;
         addNotification(notification);
-        console.log("Davetiye bildirimi gönderildi:", notification);
       }
     } catch (notificationError) {
       console.error(

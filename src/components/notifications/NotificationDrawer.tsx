@@ -1,7 +1,12 @@
 "use client";
 
 import React from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { BellRing } from "lucide-react";
 import { NotificationList } from "./NotificationList";
@@ -33,6 +38,7 @@ export function NotificationDrawer() {
         className="p-0 sm:max-w-md flex flex-col"
         aria-label="Bildirimler"
       >
+        <SheetTitle className="sr-only">Bildirimler</SheetTitle>
         <div className="flex-1 overflow-hidden">
           <NotificationList onClose={handleClose} />
         </div>

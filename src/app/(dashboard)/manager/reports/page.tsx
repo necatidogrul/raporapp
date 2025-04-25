@@ -53,11 +53,10 @@ export default function ManagerReportsPage() {
         }
 
         setLoading(true);
-        console.log("Yönetici raporları yükleniyor...");
 
         // Yönetici raporlarını getir
         const reportList = await getManagerReports(auth.currentUser.uid);
-        console.log("Bulunan rapor sayısı:", reportList.length);
+
 
         // Firebase'den alınan verileri uygun formata dönüştür
         const formattedReports = reportList.map((doc: FirebaseReport) => {

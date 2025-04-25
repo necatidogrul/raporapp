@@ -24,11 +24,13 @@ import { Settings, FileText } from "lucide-react";
 import { NotificationDrawer } from "@/components/notifications/NotificationDrawer";
 import { useNotificationStore } from "@/store/notification-store";
 import { fetchUserNotifications } from "@/store/notification-store";
+import { useSidebarStore } from "@/components/ui/sidebar";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { setNotifications } = useNotificationStore();
+  const { toggleSidebar } = useSidebarStore();
   const [userName, setUserName] = useState<string>("");
   const [userInitials, setUserInitials] = useState<string>("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -120,12 +122,12 @@ export function Navbar() {
           <span className="hidden md:inline-block text-lg">Raporla</span>
         </div>
 
-        {/* Mobil Menü Düğmesi */}
+        {/* Mobil Menü Düğmesi - Sidebar için */}
         <Button
           variant="ghost"
           size="icon"
           className="md:hidden ml-2"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={toggleSidebar}
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -197,37 +199,17 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobil Menü */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-t py-2 px-4 space-y-2">
-          <div className="relative mb-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Görev veya rapor ara..."
-              className="pl-8 w-full bg-muted/40"
-            />
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => router.push("/profile")}
-          >
-            <User className="mr-2 h-4 w-4" />
-            <span>Profil</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start"
-            onClick={() => router.push("/settings")}
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Ayarlar</span>
-          </Button>
+      {/* Mobil Arama */}
+      <div className="md:hidden border-t py-2 px-4">
+        <div className="relative mb-2">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Görev veya rapor ara..."
+            className="pl-8 w-full bg-muted/40"
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }

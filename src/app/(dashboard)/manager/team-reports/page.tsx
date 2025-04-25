@@ -117,12 +117,9 @@ export default function TeamReportsPage() {
   useEffect(() => {
     const checkFirebaseConnection = async () => {
       try {
-        console.log("Firebase bağlantısı kontrol ediliyor...");
 
         if (!auth.currentUser) {
-          console.log(
-            "Kullanıcı giriş yapmamış, giriş sayfasına yönlendiriliyor"
-          );
+          
           router.push("/login");
           return;
         }
@@ -130,7 +127,6 @@ export default function TeamReportsPage() {
         // Kullanıcı rolünü kontrol et
         try {
           const userData = await getUserData(auth.currentUser.uid);
-          console.log("Kullanıcı verileri:", userData);
 
           if (userData?.role !== "manager") {
             setError("Bu sayfaya erişmek için yönetici olmanız gerekiyor");
@@ -158,29 +154,23 @@ export default function TeamReportsPage() {
     const loadOrganizations = async () => {
       try {
         if (!auth.currentUser) {
-          console.log("Kullanıcı giriş yapmamış");
           setLoading(false);
           return;
         }
 
-        console.log("Organizasyonlar yükleniyor...");
         const orgList = await getUserOrganizations(auth.currentUser.uid);
-        console.log("Yüklenen organizasyonlar:", orgList);
 
         // Sadece yönetici olduğu organizasyonları filtrele
         const managerOrgs = orgList.filter(
           (org) => org.managerId === auth.currentUser?.uid
         );
-        console.log("Yönetici olduğu organizasyonlar:", managerOrgs);
 
         setOrganizations(managerOrgs);
 
         if (managerOrgs.length > 0 && !selectedOrg) {
-          console.log("İlk organizasyon seçiliyor:", managerOrgs[0].id);
           setSelectedOrg(managerOrgs[0].id);
           setSelectedOrgData(managerOrgs[0]);
         } else if (managerOrgs.length === 0) {
-          console.log("Yönetici olduğu organizasyon bulunamadı");
           setLoading(false);
         }
       } catch (error) {
@@ -196,53 +186,41 @@ export default function TeamReportsPage() {
   // Seçili organizasyonun üyelerini ve raporlarını yükle
   useEffect(() => {
     if (!selectedOrg) {
-      console.log("Seçili organizasyon yok, üyeler ve raporlar yüklenmiyor");
       return;
     }
 
     const loadMembersAndReports = async () => {
       setLoading(true);
       try {
-        console.log(
-          "Seçili organizasyon için üyeler ve raporlar yükleniyor:",
-          selectedOrg
-        );
 
         // Üyeleri yükle
-        console.log("Üyeler yükleniyor...");
         const memberList = await getOrganizationMembers(selectedOrg);
-        console.log("Yüklenen üyeler:", memberList);
 
         // Yöneticiyi listeden çıkar
         const filteredMembers = memberList.filter(
           (member) => member.id !== auth.currentUser?.uid
         );
-        console.log("Filtrelenmiş üyeler:", filteredMembers);
         setMembers(filteredMembers);
 
         // Raporları yükle
         if (auth.currentUser) {
-          console.log("Raporlar yükleniyor...");
           const reportList = await getManagerReports(auth.currentUser.uid);
-          console.log("Yüklenen raporlar:", reportList);
 
           // Sadece seçili organizasyona ait raporları filtrele
           const orgReports = reportList.filter(
             (report) => report.organizationId === selectedOrg
           );
-          console.log("Organizasyon raporları:", orgReports);
           setReports(orgReports);
 
           // İstatistikleri hesapla
           calculateStats(filteredMembers, orgReports);
         } else {
-          console.log("Kullanıcı giriş yapmamış, raporlar yüklenemiyor");
+          
         }
       } catch (error) {
         console.error("Veriler yüklenirken hata:", error);
         toast.error("Veriler yüklenirken bir hata oluştu");
       } finally {
-        console.log("Yükleme tamamlandı, loading durumu false yapılıyor");
         setLoading(false);
       }
     };
@@ -334,7 +312,6 @@ export default function TeamReportsPage() {
       const report = memberReports[0];
       return { status: report.status, report };
     } catch (error) {
-      console.error("Rapor durumu kontrol edilirken hata:", error);
       return { status: "NOT_SUBMITTED", report: null };
     }
   };

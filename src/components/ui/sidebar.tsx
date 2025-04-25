@@ -15,14 +15,53 @@ import {
   User,
   UserPlus,
   ListChecks,
+  MenuIcon,
+  X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
 import {
   getUserData,
   getPendingInvitations,
   checkAndPromoteOrganizationManagers,
 } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
+// Sidebar Context oluşturma
+type SidebarContextType = {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
+};
+
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
+// SidebarProvider bileşeni
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleSidebar = () => setIsOpen((prev) => !prev);
+
+  return (
+    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggleSidebar }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+}
+
+// Hook kullanımı için
+export function useSidebarStore() {
+  const context = useContext(SidebarContext);
+  if (context === undefined) {
+    throw new Error("useSidebarStore must be used within a SidebarProvider");
+  }
+  return context;
+}
 
 type MenuItem = {
   title: string;
@@ -127,6 +166,21 @@ export function Sidebar() {
   const router = useRouter();
   const [isManager, setIsManager] = useState(false);
   const [hasPendingInvitations, setHasPendingInvitations] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const { isOpen, setIsOpen } = useSidebarStore();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    // İlk yükleme sırasında ekran boyutunu kontrol et
+    handleResize();
+
+    // Pencere boyutu değiştiğinde kontrol et
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -154,12 +208,24 @@ export function Sidebar() {
     checkUserRole();
   }, []);
 
+  // Route değiştiğinde mobil menüyü kapat
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname, setIsOpen]);
+
   // Menü öğelerini gruplandır
   const mainItems = menuItems.filter((item) => item.group === "main");
   const reportItems = menuItems.filter((item) => item.group === "reports");
   const taskItems = menuItems.filter((item) => item.group === "tasks");
   const orgItems = menuItems.filter((item) => item.group === "organization");
   const settingsItems = menuItems.filter((item) => item.group === "settings");
+
+  const handleNavigation = (href: string) => {
+    router.push(href);
+    if (isMobile) {
+      setIsOpen(false);
+    }
+  };
 
   const renderMenuGroup = (items: MenuItem[]) => {
     return items.map((item: MenuItem) => {
@@ -175,7 +241,7 @@ export function Sidebar() {
               "w-full justify-start gap-2",
               pathname === item.href && "bg-primary text-primary-foreground"
             )}
-            onClick={() => router.push(item.href)}
+            onClick={() => handleNavigation(item.href)}
           >
             <item.icon className="h-5 w-5" />
             <span className="flex-1 text-left">{item.title}</span>
@@ -189,55 +255,81 @@ export function Sidebar() {
     });
   };
 
+  const sidebarContent = (
+    <div className="space-y-6 h-full overflow-y-auto py-4">
+      <div className="space-y-2">{renderMenuGroup(mainItems)}</div>
+
+      {reportItems.some(
+        (item) => item.forAll || (item.onlyManager && isManager)
+      ) && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
+            RAPORLAR
+          </div>
+          {renderMenuGroup(reportItems)}
+        </div>
+      )}
+
+      {taskItems.some(
+        (item) => item.forAll || (item.onlyManager && isManager)
+      ) && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
+            GÖREVLER
+          </div>
+          {renderMenuGroup(taskItems)}
+        </div>
+      )}
+
+      {orgItems.some(
+        (item) => item.forAll || (item.onlyManager && isManager)
+      ) && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
+            ORGANİZASYON
+          </div>
+          {renderMenuGroup(orgItems)}
+        </div>
+      )}
+
+      {settingsItems.some(
+        (item) => item.forAll || (item.onlyManager && isManager)
+      ) && (
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
+            HESAP
+          </div>
+          {renderMenuGroup(settingsItems)}
+        </div>
+      )}
+    </div>
+  );
+
+  // Mobil görünüm için Sheet component'i
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="left" className="p-0 w-72">
+          <SheetTitle className="sr-only">Menü</SheetTitle>
+          <div className="flex justify-end p-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="px-4">{sidebarContent}</div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Masaüstü görünümü
   return (
-    <div className="w-64 h-screen bg-background border-r flex flex-col p-4">
-      <div className="space-y-6">
-        <div className="space-y-2">{renderMenuGroup(mainItems)}</div>
-
-        {reportItems.some(
-          (item) => item.forAll || (item.onlyManager && isManager)
-        ) && (
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-              RAPORLAR
-            </div>
-            {renderMenuGroup(reportItems)}
-          </div>
-        )}
-
-        {taskItems.some(
-          (item) => item.forAll || (item.onlyManager && isManager)
-        ) && (
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-              GÖREVLER
-            </div>
-            {renderMenuGroup(taskItems)}
-          </div>
-        )}
-
-        {orgItems.some(
-          (item) => item.forAll || (item.onlyManager && isManager)
-        ) && (
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-              ORGANİZASYON
-            </div>
-            {renderMenuGroup(orgItems)}
-          </div>
-        )}
-
-        {settingsItems.some(
-          (item) => item.forAll || (item.onlyManager && isManager)
-        ) && (
-          <div className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-              HESAP
-            </div>
-            {renderMenuGroup(settingsItems)}
-          </div>
-        )}
-      </div>
+    <div className="hidden lg:block w-64 h-screen bg-background border-r flex-shrink-0 overflow-y-auto">
+      <div className="p-4">{sidebarContent}</div>
     </div>
   );
 }
