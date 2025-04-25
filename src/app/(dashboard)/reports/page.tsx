@@ -11,6 +11,7 @@ import { db, auth } from "@/lib/firebase";
 import { useReportStore } from "@/store/report-store";
 import { Report } from "@/types/report";
 import { toast } from "sonner";
+import { Loader } from "@/components/ui/loader";
 
 export default function ReportsPage() {
   const [showNewReportDialog, setShowNewReportDialog] = useState(false);
@@ -88,11 +89,7 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">Raporlar yükleniyor...</div>
-      ) : (
-        <ReportList />
-      )}
+      {loading ? <Loader /> : <ReportList />}
 
       <NewReportDialog
         open={showNewReportDialog}

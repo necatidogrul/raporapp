@@ -30,6 +30,7 @@ import { getManagerReports } from "@/lib/firebase-utils";
 import type { Report as FirebaseReport } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
 import type { Report } from "@/types/report";
+import { Loader } from "@/components/ui/loader";
 
 export default function ManagerReportsPage() {
   const reports = useReportStore((state) => state.reports);
@@ -155,14 +156,7 @@ export default function ManagerReportsPage() {
       <h1 className="text-2xl font-bold">Gönderilen Raporlar</h1>
 
       {loading ? (
-        <Card>
-          <CardContent className="py-8 flex justify-center items-center">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              <p className="text-muted-foreground">Raporlar yükleniyor...</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Loader />
       ) : submittedReports.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">

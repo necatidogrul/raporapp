@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useReportStore } from "@/store/report-store";
 import { Report } from "@/types/report";
 import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
 import {} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -140,8 +141,7 @@ export default function ManagerReportDetailPage() {
     return (
       <div className="container py-12 px-4 md:px-8">
         <div className="flex flex-col items-center justify-center space-y-4 min-h-[60vh]">
-          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-muted-foreground">Rapor yükleniyor...</p>
+          <Loader />
         </div>
       </div>
     );

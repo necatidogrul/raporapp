@@ -56,7 +56,7 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       await signOut(auth);
-      router.push("/login");
+      router.push("/");
     } catch {
       toast.error("Çıkış yapılırken bir hata oluştu");
     } finally {

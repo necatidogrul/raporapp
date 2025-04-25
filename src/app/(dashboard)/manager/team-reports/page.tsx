@@ -54,6 +54,7 @@ import { tr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Loader } from "@/components/ui/loader";
 
 export default function TeamReportsPage() {
   const router = useRouter();
@@ -402,7 +403,7 @@ export default function TeamReportsPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Yükleniyor...</div>;
+    return <Loader className="p-6" />;
   }
 
   return (

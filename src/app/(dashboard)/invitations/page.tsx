@@ -14,6 +14,7 @@ import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Loader } from "@/components/ui/loader";
 
 export default function InvitationsPage() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -59,7 +60,7 @@ export default function InvitationsPage() {
   };
 
   if (loading) {
-    return <div>Yükleniyor...</div>;
+    return <Loader />;
   }
 
   return (

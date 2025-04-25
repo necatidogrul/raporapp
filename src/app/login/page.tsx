@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -48,13 +49,11 @@ export default function LoginPage() {
         !callbackUrl.startsWith("//");
 
       // Eğer güvenli bir callbackUrl varsa, oraya yönlendir, yoksa dashboard'a git
-      setTimeout(() => {
-        if (isSafeUrl) {
-          router.replace(callbackUrl);
-        } else {
-          router.replace("/dashboard");
-        }
-      }, 100); // küçük bir gecikme ekleyerek tarayıcının durumunu güncellemeye zaman tanı
+      if (isSafeUrl) {
+        router.replace(callbackUrl);
+      } else {
+        router.replace("/dashboard");
+      }
     } catch (error) {
       const authError = error as AuthError;
       let errorMessage = "Giriş yapılırken bir hata oluştu";
@@ -83,18 +82,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-bold text-center">
-            Raporla
-          </CardTitle>
-          <CardDescription className="text-center">
-            İş takip sistemine hoş geldiniz
-          </CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-800 dark:via-gray-900 dark:to-black px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md shadow-xl dark:border dark:border-gray-700">
+        <CardHeader className="space-y-2 text-center">
+          {/* Logo eklenebilir */}
+          {/* <img src="/logo.png" alt="Raporla Logo" className="mx-auto h-12 w-auto" /> */}
+          <CardTitle className="text-3xl font-bold">Raporla</CardTitle>
+          <CardDescription>İş takip sistemine hoş geldiniz</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 E-posta
@@ -121,16 +118,19 @@ export default function LoginPage() {
                 required
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={loading}
-            >
-              {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Giriş Yap"
+              )}
             </Button>
-            <div className="text-center text-sm">
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
               Hesabınız yok mu?{" "}
-              <Link href="/register" className="text-blue-600 hover:underline">
+              <Link
+                href="/register"
+                className="font-medium text-primary hover:underline"
+              >
                 Kayıt olun
               </Link>
             </div>

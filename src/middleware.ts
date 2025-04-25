@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// import type { NextRequest } from "next/server";
 
 // Herkese açık sayfalar
-const publicPaths = ["/", "/login", "/register"];
+// const publicPaths = ["/", "/login", "/register"];
 
-export function middleware(request: NextRequest) {
+export function middleware() {
   const response = NextResponse.next();
 
   // Oturum bilgisini al (kurabiye/cookie üzerinden)
-  const authCookie = request.cookies.get("__session");
-  const isAuthenticated = authCookie !== undefined && authCookie.value !== "";
-  const path = request.nextUrl.pathname;
+  // const authCookie = request.cookies.get("__session");
+  // const isAuthenticated = authCookie !== undefined && authCookie.value !== "";
+  // const path = request.nextUrl.pathname;
 
   // CSP başlıklarını yanıta ekle (çift koruma olarak next.config.ts'deki CSP'yi destekler)
   response.headers.set(
@@ -37,24 +37,19 @@ export function middleware(request: NextRequest) {
     "max-age=31536000; includeSubDomains; preload"
   );
 
-  // Auth kontrolü ve yönlendirme
-  // Eğer kullanıcı giriş yapmamışsa ve korumalı bir rotaya erişmeye çalışıyorsa login sayfasına yönlendir
-  if (
-    !isAuthenticated &&
-    !publicPaths.includes(path) &&
-    !path.includes("/_next") &&
-    !path.includes("/api/")
-  ) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", path);
-    return NextResponse.redirect(loginUrl);
-  }
+  // Auth kontrolü ve yönlendirme client-side AuthProvider tarafından yapılacak.
+  // Middleware sadece güvenlik başlıkları ve belki API koruması için kullanılabilir.
 
-  // Eğer kullanıcı zaten giriş yapmışsa ve login/register sayfalarına gitmeye çalışıyorsa
-  // dashboard'a yönlendir (otomatik giriş)
-  if (isAuthenticated && (path === "/login" || path === "/register")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
+  // Örnek: API rotalarını korumak istersen:
+  // const path = request.nextUrl.pathname;
+  // const authCookie = request.cookies.get(\"__session\");
+  // const isAuthenticated = authCookie !== undefined && authCookie.value !== \"\";
+  // if (path.startsWith(\"/api/protected\") && !isAuthenticated) {
+  //   return new NextResponse(
+  //     JSON.stringify({ success: false, message: 'authentication failed' }),
+  //     { status: 401, headers: { 'content-type': 'application/json' } }
+  //   )
+  // }
 
   return response;
 }

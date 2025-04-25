@@ -13,6 +13,7 @@ import { Eye, Check, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { Loader } from "@/components/ui/loader";
 
 export default function ManagerPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -94,7 +95,7 @@ export default function ManagerPage() {
   };
 
   if (loading) {
-    return <div className="p-6">Yükleniyor...</div>;
+    return <Loader className="p-6" />;
   }
 
   return (

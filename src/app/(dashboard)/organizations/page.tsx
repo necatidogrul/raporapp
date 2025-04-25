@@ -25,6 +25,7 @@ import { Plus, Users, ArrowRight, Trash2, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
+import { Loader } from "@/components/ui/loader";
 
 export default function OrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -152,7 +153,9 @@ export default function OrganizationsPage() {
       </div>
 
       {/* Organizasyon Listesi */}
-      {organizations.length === 0 ? (
+      {loading ? (
+        <Loader />
+      ) : organizations.length === 0 ? (
         <div className="flex flex-col items-center justify-center space-y-4 py-12 text-center">
           <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center">
             <Building2 className="h-8 w-8 text-muted-foreground" />

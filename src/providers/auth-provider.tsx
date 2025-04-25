@@ -4,6 +4,7 @@ import { auth } from "@/lib/firebase";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { Loader } from "@/components/ui/loader";
 
 interface AuthContextType {
   user: User | null;
@@ -15,7 +16,9 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-const publicPaths = ["/", "/login", "/register"];
+// Login, register gibi herkese açık sayfaları tanımla
+// Ayrıca API rotalarını da ekleyebilirsin, örn: /api/auth
+const publicPaths = ["/login", "/register"];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -24,24 +27,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Hidrasyon sorunlarını önlemek için bir sonraki tick'e erteleme
-    const timeoutId = setTimeout(() => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
 
-        if (!user && !publicPaths.includes(pathname)) {
-          const loginUrl = new URL("/login", window.location.origin);
-          loginUrl.searchParams.set("callbackUrl", pathname);
-          router.replace(loginUrl.toString());
-        }
-      });
+    // Listener'ı component unmount olduğunda temizle
+    return () => unsubscribe();
+  }, []); // Bağımlılıkları kaldır, yalnızca mount/unmount'ta çalışsın
 
-      return () => unsubscribe();
-    }, 0);
+  useEffect(() => {
+    // Yükleme bitmeden veya kullanıcı zaten varsa işlem yapma
+    if (loading || user) return;
 
-    return () => clearTimeout(timeoutId);
-  }, [pathname, router]);
+    // Mevcut yol public değilse ve kök dizin de değilse login'e yönlendir
+    const isPublic = publicPaths.some((path) => pathname.startsWith(path));
+    const isRoot = pathname === "/"; // Ana sayfa her zaman public kabul edilebilir
+
+    if (!isPublic && !isRoot) {
+      console.log(`Redirecting to login from: ${pathname}`); // Debug için log
+      const redirectPath = `/login?callbackUrl=${encodeURIComponent(pathname)}`;
+      router.replace(redirectPath);
+    }
+  }, [user, loading, pathname, router]); // Bu effect kullanıcı, yükleme durumu veya yol değiştiğinde çalışsın
+
+  // Yükleme sırasında boş içerik veya bir yükleniyor göstergesi döndür
+  // Bu, ilk render sırasında yönlendirme yapmadan önce içeriğin kısa süreliğine görünmesini engeller
+  if (loading) {
+    return <Loader className="h-screen" text="" />;
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

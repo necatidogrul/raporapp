@@ -15,6 +15,7 @@ import {
   Invitation,
 } from "@/lib/firebase-utils";
 import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
 import {
   Card,
   CardContent,
@@ -423,7 +424,7 @@ export default function OrganizationDetailPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Yükleniyor...</div>;
+    return <Loader className="p-6" />;
   }
 
   return (
