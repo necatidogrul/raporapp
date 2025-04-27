@@ -107,8 +107,6 @@ export async function fetchUserNotifications(userId: string) {
       return [];
     }
 
-    console.log(`Kullanıcı bildirimleri yükleniyor: ${userId}`);
-
     const notificationsQuery = query(
       collection(db, "notifications"),
       where("userId", "==", userId),
@@ -128,7 +126,6 @@ export async function fetchUserNotifications(userId: string) {
       } as Notification);
     });
 
-    console.log(`Toplam ${notifications.length} bildirim yüklendi`);
     return notifications;
   } catch (error) {
     console.error("Bildirimler alınırken hata oluştu:", error);

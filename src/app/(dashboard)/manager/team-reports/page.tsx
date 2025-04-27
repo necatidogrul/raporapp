@@ -38,6 +38,11 @@ import {
   UsersIcon,
   ChevronRightIcon,
   ChevronLeftIcon,
+  Building2,
+  BarChart3,
+  Clock,
+  Filter,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -55,6 +60,7 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Loader } from "@/components/ui/loader";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function TeamReportsPage() {
   const router = useRouter();
@@ -187,7 +193,10 @@ export default function TeamReportsPage() {
     }
 
     const loadMembersAndReports = async () => {
-      setLoading(true);
+      // Sadece ilk yüklemede loading state'ini true yap
+      if (!reports.length) {
+        setLoading(true);
+      }
       try {
         // Üyeleri yükle
         const memberList = await getOrganizationMembers(selectedOrg);
@@ -210,7 +219,6 @@ export default function TeamReportsPage() {
 
           // İstatistikleri hesapla
           calculateStats(filteredMembers, orgReports);
-        } else {
         }
       } catch (error) {
         console.error("Veriler yüklenirken hata:", error);
@@ -367,330 +375,248 @@ export default function TeamReportsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Organizasyon Rapor Durumu</h1>
-        <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-          />
-          Yenile
-        </Button>
+    <div className="p-6 space-y-8">
+      <div className="flex flex-col gap-2">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2"
+        >
+          <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-blue-500 text-transparent bg-clip-text">
+            Takım Raporları
+          </h1>
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-muted-foreground"
+        >
+          Ekibinizin haftalık rapor durumlarını takip edin ve performansı analiz
+          edin.
+        </motion.p>
       </div>
 
-      {organizations.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center text-muted-foreground">
-            <p>Yönetici olduğunuz bir organizasyon bulunmamaktadır.</p>
-            <Button
-              className="mt-4"
-              onClick={() => router.push("/organizations")}
-            >
-              Organizasyon Oluştur
-            </Button>
-          </CardContent>
-        </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+      >
+        <Select value={selectedOrg} onValueChange={handleSelectOrganization}>
+          <SelectTrigger className="w-full sm:w-[240px] bg-background/50 backdrop-blur-sm">
+            <SelectValue placeholder="Organizasyon seçin" />
+          </SelectTrigger>
+          <SelectContent>
+            {organizations.map((org) => (
+              <SelectItem key={org.id} value={org.id}>
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  {org.name}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleSelectWeek("prev")}
+            className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
+          >
+            <CalendarIcon className="h-4 w-4 mr-2" />
+            {formatWeekInfo(currentWeekDate)}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleSelectWeek("next")}
+            className="bg-background/50 backdrop-blur-sm hover:bg-background/80"
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            className={`bg-background/50 backdrop-blur-sm hover:bg-background/80 ${
+              refreshing ? "animate-spin" : ""
+            }`}
+            disabled={refreshing}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </motion.div>
+
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader className="w-8 h-8 text-primary animate-spin" />
+        </div>
       ) : (
         <>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Organizasyon
-                  </label>
-                  <Select
-                    value={selectedOrg}
-                    onValueChange={handleSelectOrganization}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Organizasyon seçin" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {organizations.map((org) => (
-                        <SelectItem key={org.id} value={org.id}>
-                          {org.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Hafta
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSelectWeek("prev")}
-                    >
-                      <ChevronLeftIcon className="h-4 w-4" />
-                      Önceki Hafta
-                    </Button>
-                    <div className="flex-1 text-center flex items-center justify-center gap-2">
-                      <CalendarIcon className="h-4 w-4" />
-                      <span>{formatWeekInfo(currentWeekDate)}</span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSelectWeek("next")}
-                    >
-                      Sonraki Hafta
-                      <ChevronRightIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Organizasyon Özeti */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+          >
+            <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium">
                   Toplam Üye
                 </CardTitle>
-                <div className="text-2xl font-bold">{stats.totalMembers}</div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <UsersIcon className="h-4 w-4 mr-1" />
-                  <span>Aktif üye sayısı</span>
+                <div className="flex items-center gap-2">
+                  <UsersIcon className="h-4 w-4 text-primary" />
+                  <span className="text-2xl font-bold">
+                    {stats.totalMembers}
+                  </span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-blue-500/10 to-primary/10 hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium">
                   Bu Hafta Gönderilen
                 </CardTitle>
-                <div className="text-2xl font-bold">
-                  {stats.submittedThisWeek}
-                </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <CheckIcon className="h-4 w-4 mr-1" />
-                  <span>Rapor gönderen üye sayısı</span>
+                <div className="flex items-center gap-2">
+                  <CheckIcon className="h-4 w-4 text-blue-500" />
+                  <span className="text-2xl font-bold">
+                    {stats.submittedThisWeek}
+                  </span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Bu Hafta Bekleyen
-                </CardTitle>
-                <div className="text-2xl font-bold">
-                  {stats.pendingThisWeek}
-                </div>
+                <CardTitle className="text-sm font-medium">Bekleyen</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <AlertTriangleIcon className="h-4 w-4 mr-1" />
-                  <span>Rapor göndermeyen üye sayısı</span>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                  <span className="text-2xl font-bold">
+                    {stats.pendingThisWeek}
+                  </span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium">
                   Tamamlanma Oranı
                 </CardTitle>
-                <div className="text-2xl font-bold">
-                  %{Math.round(stats.completionRate)}
-                </div>
               </CardHeader>
               <CardContent>
-                <Progress value={stats.completionRate} className="h-2" />
-                <div className="mt-2 text-xs text-muted-foreground">
-                  {stats.submittedThisWeek} / {stats.totalMembers} üye rapor
-                  gönderdi
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-green-500" />
+                    <span className="text-2xl font-bold">
+                      %{Math.round(stats.completionRate)}
+                    </span>
+                  </div>
+                  <Progress value={stats.completionRate} className="h-2" />
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
 
-          <Tabs defaultValue="list">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="list">Liste Görünümü</TabsTrigger>
-              <TabsTrigger value="grid">Kart Görünümü</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="list" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Takım Üyeleri</CardTitle>
-                  <CardDescription>
-                    {selectedOrgData?.name} organizasyonundaki üyelerin haftalık
-                    rapor durumları
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {members.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">
-                      Bu organizasyonda henüz üye bulunmuyor.
-                    </div>
-                  ) : (
-                    <div className="divide-y">
-                      {members.map((member) => {
-                        const { status, report } = getMemberReportStatus(
-                          member.id,
-                          currentWeekDate
-                        );
-
-                        return (
-                          <div
-                            key={member.id}
-                            className="py-4 flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                                {member.name?.charAt(0).toUpperCase() || "U"}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="grid gap-4"
+          >
+            <Card className="overflow-hidden border-none bg-gradient-to-br from-background to-background/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold bg-gradient-to-r from-primary to-purple-600 text-transparent bg-clip-text">
+                  Üye Durumları
+                </CardTitle>
+                <CardDescription>
+                  {selectedOrgData?.name} organizasyonundaki üyelerin rapor
+                  durumları
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {members.map((member, index) => {
+                      const status = getMemberReportStatus(
+                        member.id,
+                        currentWeekDate
+                      );
+                      return (
+                        <motion.div
+                          key={member.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="group"
+                        >
+                          <Card className="bg-card/50 hover:bg-card/80 transition-all duration-300">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
+                                      <UsersIcon className="h-5 w-5 text-primary" />
+                                    </div>
+                                    {status.report?.status === "SUBMITTED" && (
+                                      <div className="absolute -bottom-1 -right-1">
+                                        <CheckIcon className="h-4 w-4 text-green-500" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium group-hover:text-primary transition-colors">
+                                      {member.name}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground">
+                                      {member.title || "Üye"}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {getStatusBadge(status.report?.status)}
+                                  {status.report && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleViewReport(status.report!.id)
+                                      }
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <ChevronRightIcon className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium">{member.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {member.email}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-2">
-                                {getStatusIcon(status)}
-                                {getStatusBadge(status)}
-                              </div>
-                              {report && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleViewReport(report.id)}
-                                >
-                                  <FileTextIcon className="h-4 w-4 mr-2" />
-                                  Raporu Görüntüle
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    Toplam {members.length} üye
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">
-                      {stats.submittedThisWeek}
-                    </span>{" "}
-                    üye rapor gönderdi,
-                    <span className="font-medium">
-                      {" "}
-                      {stats.pendingThisWeek}
-                    </span>{" "}
-                    üye rapor göndermedi
-                  </div>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="grid" className="mt-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {members.length === 0 ? (
-                  <Card className="col-span-full">
-                    <CardContent className="pt-6 text-center text-muted-foreground">
-                      Bu organizasyonda henüz üye bulunmuyor.
-                    </CardContent>
-                  </Card>
-                ) : (
-                  members.map((member) => {
-                    const { status, report } = getMemberReportStatus(
-                      member.id,
-                      currentWeekDate
-                    );
-
-                    return (
-                      <Card key={member.id} className="overflow-hidden">
-                        <div
-                          className={`h-2 ${
-                            status === "APPROVED"
-                              ? "bg-green-500"
-                              : status === "REJECTED"
-                              ? "bg-red-500"
-                              : status === "SUBMITTED" ||
-                                status === "UNREAD" ||
-                                status === "READ"
-                              ? "bg-blue-500"
-                              : "bg-gray-300"
-                          }`}
-                        ></div>
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                                {member.name?.charAt(0).toUpperCase() || "U"}
-                              </div>
-                              <div>
-                                <CardTitle className="text-base">
-                                  {member.name}
-                                </CardTitle>
-                                <p className="text-sm text-muted-foreground">
-                                  {member.email}
-                                </p>
-                              </div>
-                            </div>
-                            {getStatusBadge(status)}
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center gap-2 mb-2">
-                              <CalendarIcon className="h-4 w-4" />
-                              <span>{formatWeekInfo(currentWeekDate)}</span>
-                            </div>
-                            {status === "NOT_SUBMITTED" ? (
-                              <p>Bu hafta için henüz rapor gönderilmemiş.</p>
-                            ) : report?.createdAt ? (
-                              <p>
-                                Rapor{" "}
-                                {format(
-                                  report.createdAt.toDate(),
-                                  "d MMMM yyyy HH:mm",
-                                  { locale: tr }
-                                )}{" "}
-                                tarihinde gönderilmiş.
-                              </p>
-                            ) : (
-                              <p>Rapor tarihi bilinmiyor.</p>
-                            )}
-                          </div>
-                        </CardContent>
-                        {report && (
-                          <CardFooter className="border-t pt-4">
-                            <Button
-                              variant="outline"
-                              className="w-full"
-                              onClick={() => handleViewReport(report.id)}
-                            >
-                              <FileTextIcon className="h-4 w-4 mr-2" />
-                              Raporu Görüntüle
-                            </Button>
-                          </CardFooter>
-                        )}
-                      </Card>
-                    );
-                  })
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </>
       )}
     </div>

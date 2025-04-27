@@ -7,11 +7,18 @@ import {
   createOrganization,
   deleteOrganization,
   Organization,
+  getUserData,
 } from "@/lib/firebase-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -21,11 +28,60 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Users, ArrowRight, Trash2, Building2 } from "lucide-react";
+import {
+  Plus,
+  Users,
+  ArrowRight,
+  Trash2,
+  Building2,
+  UserIcon,
+  BuildingIcon,
+  UsersIcon,
+  UserPlusIcon,
+  LayoutDashboardIcon,
+  TrendingUpIcon,
+  ArrowUpIcon,
+  ShieldIcon,
+  CircleCheckIcon,
+  CircleDashedIcon,
+  LandmarkIcon,
+  NetworkIcon,
+  GitMergeIcon,
+  FlaskConicalIcon,
+  BarChart3Icon,
+  Briefcase,
+  Boxes,
+  Building,
+  Code2,
+  Database,
+  Dna,
+  Factory,
+  Globe,
+  Layers,
+  LineChart,
+  Rocket,
+  Wallet,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { Loader } from "@/components/ui/loader";
+import { Progress } from "@/components/ui/progress";
+import { motion, AnimatePresence } from "framer-motion";
+
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
 export default function OrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -37,6 +93,9 @@ export default function OrganizationsPage() {
   const [organizationToDelete, setOrganizationToDelete] =
     useState<Organization | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("");
+  const [progressValue, setProgressValue] = useState<number>(0);
+  const [selectedLogo, setSelectedLogo] = useState<string>("Building");
   const router = useRouter();
 
   const loadOrganizations = async (userId: string) => {
@@ -56,6 +115,17 @@ export default function OrganizationsPage() {
       if (user) {
         setCurrentUserId(user.uid);
         loadOrganizations(user.uid);
+
+        // Kullanıcı bilgilerini getir
+        const fetchUserData = async () => {
+          if (user) {
+            const userData = await getUserData(user.uid);
+            if (userData) {
+              setUserName(userData.name);
+            }
+          }
+        };
+        fetchUserData();
       } else {
         setCurrentUserId(null);
         setOrganizations([]);
@@ -66,6 +136,23 @@ export default function OrganizationsPage() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Yönetici olunan organizasyon oranı için progress bar
+    const managedOrgs = organizations.filter(
+      (org) => org.managerId === currentUserId
+    );
+    const managedRate =
+      organizations.length > 0
+        ? Math.round((managedOrgs.length / organizations.length) * 100)
+        : 0;
+
+    const timer = setTimeout(() => {
+      setProgressValue(managedRate);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [organizations, currentUserId]);
+
   const handleCreateOrg = async () => {
     try {
       if (!currentUserId) return;
@@ -74,12 +161,14 @@ export default function OrganizationsPage() {
         name: newOrgName,
         description: newOrgDesc,
         managerId: currentUserId,
+        logo: selectedLogo,
       });
 
       toast.success("Organizasyon oluşturuldu");
       setShowNewOrgDialog(false);
       setNewOrgName("");
       setNewOrgDesc("");
+      setSelectedLogo("Building");
 
       // Organizasyonları yeniden yükle
       loadOrganizations(currentUserId);
@@ -119,148 +208,364 @@ export default function OrganizationsPage() {
     }
   };
 
+  // Logo seçeneklerini tanımlayacağım - ikonlarla eşleştirilmiş
+  const logoOptions = [
+    { name: "Building", icon: Building, color: "indigo" },
+    { name: "Landmark", icon: LandmarkIcon, color: "indigo" },
+    { name: "Network", icon: NetworkIcon, color: "purple" },
+    { name: "Database", icon: Database, color: "purple" },
+    { name: "Dna", icon: Dna, color: "rose" },
+    { name: "Factory", icon: Factory, color: "rose" },
+    { name: "Globe", icon: Globe, color: "indigo" },
+    { name: "Code", icon: Code2, color: "purple" },
+    { name: "Chart", icon: LineChart, color: "rose" },
+    { name: "Briefcase", icon: Briefcase, color: "indigo" },
+    { name: "Layers", icon: Layers, color: "purple" },
+    { name: "Rocket", icon: Rocket, color: "rose" },
+    { name: "FlaskConical", icon: FlaskConicalIcon, color: "indigo" },
+    { name: "GitMerge", icon: GitMergeIcon, color: "purple" },
+    { name: "Wallet", icon: Wallet, color: "rose" },
+    { name: "Boxes", icon: Boxes, color: "indigo" },
+  ];
+
+  // İkon listesini logoOptions'dan otomatik oluşturuyoruz
+  const orgIcons = logoOptions.map((logo) => logo.icon);
+
   if (loading) {
-    return (
-      <div className="container py-12 px-4 md:px-8">
-        <div className="flex flex-col items-center justify-center space-y-4 min-h-[60vh]">
-          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-muted-foreground">Organizasyonlar yükleniyor...</p>
-        </div>
-      </div>
-    );
+    return <Loader className="p-8" />;
   }
 
-  return (
-    <div className="container py-8 px-4 md:px-8 space-y-8">
-      {/* Başlık ve Yeni Organizasyon Butonu */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-6">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Organizasyonlarım
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Yönettiğiniz ve üyesi olduğunuz organizasyonlar
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowNewOrgDialog(true)}
-          className="bg-primary hover:bg-primary/90 transition-all"
-          size="lg"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Yeni Organizasyon
-        </Button>
-      </div>
+  // Organizasyon istatistikleri
+  const totalOrgs = organizations.length;
+  const managedOrgs = organizations.filter(
+    (org) => org.managerId === currentUserId
+  );
+  const memberOnlyOrgs = organizations.filter(
+    (org) => org.managerId !== currentUserId
+  );
+  const totalMembers = organizations.reduce(
+    (total, org) => total + (org.members?.length || 1),
+    0
+  );
+  const managedRate =
+    totalOrgs > 0 ? Math.round((managedOrgs.length / totalOrgs) * 100) : 0;
 
-      {/* Organizasyon Listesi */}
-      {loading ? (
-        <Loader />
-      ) : organizations.length === 0 ? (
-        <div className="flex flex-col items-center justify-center space-y-4 py-12 text-center">
-          <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-medium">Henüz organizasyonunuz yok</h2>
-          <p className="text-muted-foreground max-w-md">
-            Yeni bir organizasyon oluşturarak takımınızı yönetmeye başlayın veya
-            bir davetiye bekleyin.
-          </p>
+  // Organizasyonları rastgele bir özelliklerle zenginleştirelim
+  const organizationsWithExtras = organizations.map((org, index) => {
+    // İkon adını organizasyondan al veya varsayılan olarak indekse göre kullan
+    const logoName = org.logo || orgIcons[index % orgIcons.length].name;
+
+    // Logo adına göre ikon bulma
+    const logoObj = logoOptions.find((l) => l.name === logoName) ||
+      logoOptions.find((l) => l.name === "Building") || {
+        name: "Building",
+        icon: Building,
+        color: "indigo",
+      };
+
+    return {
+      ...org,
+      icon: logoObj.icon,
+      color: logoObj.color,
+    };
+  });
+
+  return (
+    <motion.div initial="initial" animate="animate" className="p-6 space-y-8">
+      {/* Üst banner */}
+      <motion.div
+        variants={fadeIn}
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 p-8 rounded-2xl shadow-lg backdrop-blur-sm border border-violet-200/20"
+      >
+        <div className="space-y-2">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-2"
+          >
+            <Building2 className="h-8 w-8 text-violet-600 animate-pulse" />
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-transparent bg-clip-text">
+              Organizasyonlar
+            </h1>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-muted-foreground"
+          >
+            Organizasyonlarınızı yönetin ve takip edin
+          </motion.p>
+        </div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.02 }}
+        >
           <Button
             onClick={() => setShowNewOrgDialog(true)}
-            className="mt-2"
-            size="lg"
+            className="bg-violet-600 hover:bg-violet-700 text-white shadow-md"
           >
-            <Plus className="h-5 w-5 mr-2" />
-            Organizasyon Oluştur
+            <Plus className="w-4 h-4 mr-2" />
+            Yeni Organizasyon
           </Button>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {organizations.map((org) => (
-            <Card
-              key={org.id}
-              className="overflow-hidden hover:shadow-lg transition-all border-muted/40 hover:border-primary/30"
+        </motion.div>
+      </motion.div>
+
+      {/* İstatistik kartları */}
+      <motion.div
+        variants={staggerContainer}
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
+      >
+        <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }}>
+          <Card className="overflow-hidden border-l-4 border-l-violet-500 shadow-lg hover:shadow-xl transition-all duration-200 bg-background/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-violet-50/50 dark:bg-violet-950/20">
+              <CardTitle className="text-sm font-medium">
+                Toplam Organizasyon
+              </CardTitle>
+              <motion.div
+                whileHover={{ rotate: 15 }}
+                className="rounded-full bg-violet-100 p-2"
+              >
+                <Building2 className="h-5 w-5 text-violet-600" />
+              </motion.div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="text-3xl font-bold"
+              >
+                {totalOrgs}
+              </motion.div>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center">
+                <Users className="h-3 w-3 mr-1 text-violet-600" />
+                Toplam organizasyon sayısı
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }}>
+          <Card className="overflow-hidden border-l-4 border-l-green-500 shadow-lg hover:shadow-xl transition-all duration-200 bg-background/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-green-50/50 dark:bg-green-950/20">
+              <CardTitle className="text-sm font-medium">Yönetilen</CardTitle>
+              <motion.div
+                whileHover={{ rotate: 15 }}
+                className="rounded-full bg-green-100 p-2"
+              >
+                <ShieldIcon className="h-5 w-5 text-green-500" />
+              </motion.div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="text-3xl font-bold"
+              >
+                {managedOrgs.length}
+              </motion.div>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center">
+                <CircleCheckIcon className="h-3 w-3 mr-1 text-green-500" />
+                Yönetici olduğunuz organizasyonlar
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }}>
+          <Card className="overflow-hidden border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all duration-200 bg-background/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-blue-50/50 dark:bg-blue-950/20">
+              <CardTitle className="text-sm font-medium">Üye Olunan</CardTitle>
+              <motion.div
+                whileHover={{ rotate: 15 }}
+                className="rounded-full bg-blue-100 p-2"
+              >
+                <UsersIcon className="h-5 w-5 text-blue-500" />
+              </motion.div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="text-3xl font-bold"
+              >
+                {memberOnlyOrgs.length}
+              </motion.div>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center">
+                <UserPlusIcon className="h-3 w-3 mr-1 text-blue-500" />
+                Üye olduğunuz organizasyonlar
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }}>
+          <Card className="overflow-hidden border-l-4 border-l-amber-500 shadow-lg hover:shadow-xl transition-all duration-200 bg-background/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-amber-50/50 dark:bg-amber-950/20">
+              <CardTitle className="text-sm font-medium">
+                Yönetim Oranı
+              </CardTitle>
+              <motion.div
+                whileHover={{ rotate: 15 }}
+                className="rounded-full bg-amber-100 p-2"
+              >
+                <BarChart3Icon className="h-5 w-5 text-amber-500" />
+              </motion.div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-2"
+              >
+                <div className="text-3xl font-bold">{managedRate}%</div>
+              </motion.div>
+              <div className="mt-2">
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Progress value={progressValue} className="h-2" />
+                </motion.div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* Organizasyon listesi */}
+      <motion.div
+        variants={fadeIn}
+        className="bg-background/80 backdrop-blur-sm rounded-2xl border shadow-lg p-8"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-6"
+        >
+          <h2 className="text-xl font-semibold flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 text-transparent bg-clip-text">
+            <NetworkIcon className="h-5 w-5 text-violet-600" />
+            Organizasyonlarınız
+          </h2>
+
+          <motion.div whileHover={{ scale: 1.02 }}>
+            <Button
+              onClick={() => setShowNewOrgDialog(true)}
+              variant="outline"
+              className="border-violet-200 hover:border-violet-300 hover:bg-violet-50 shadow-sm"
             >
-              <div className="h-2 bg-gradient-to-r from-primary to-primary/60"></div>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex justify-between items-center">
-                  <span>{org.name}</span>
-                  <div className="flex items-center gap-2">
-                    {currentUserId === org.managerId ? (
-                      <>
-                        <Badge className="bg-primary hover:bg-primary">
-                          Yönetici
-                        </Badge>
+              <Plus className="w-4 h-4 mr-2 text-violet-600" />
+              Yeni Organizasyon
+            </Button>
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          variants={staggerContainer}
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        >
+          <AnimatePresence>
+            {organizations.map((org, index) => {
+              const logoObj = logoOptions.find((l) => l.name === org.logo) ||
+                logoOptions.find((l) => l.name === "Building") || {
+                  name: "Building",
+                  icon: Building,
+                  color: "indigo",
+                };
+              const LogoIcon = logoObj.icon;
+
+              return (
+                <motion.div
+                  key={org.id}
+                  variants={fadeIn}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="group"
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 bg-background/80 backdrop-blur-sm">
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <motion.div
+                          whileHover={{ rotate: 15 }}
+                          className={`rounded-lg bg-${logoObj.color}-100 p-2`}
+                        >
+                          <LogoIcon
+                            className={`h-5 w-5 text-${logoObj.color}-600`}
+                          />
+                        </motion.div>
+                        {org.managerId === currentUserId && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-violet-100 text-violet-700"
+                          >
+                            Yönetici
+                          </Badge>
+                        )}
+                      </div>
+                      <CardTitle className="text-lg font-semibold group-hover:text-violet-600 transition-colors">
+                        {org.name}
+                      </CardTitle>
+                      {org.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {org.description}
+                        </p>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>{org.members?.length || 1} üye</span>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewOrgDetails(org.id)}
+                        className="hover:bg-violet-50 hover:text-violet-600"
+                      >
+                        Detaylar
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                      {org.managerId === currentUserId && (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          size="sm"
+                          onClick={() => {
                             setOrganizationToDelete(org);
                             setShowDeleteDialog(true);
                           }}
+                          className="hover:bg-red-50 hover:text-red-600"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
-                      </>
-                    ) : (
-                      <Badge variant="secondary">Üye</Badge>
-                    )}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent
-                className="cursor-pointer pt-2"
-                onClick={() => handleViewOrgDetails(org.id)}
-              >
-                <p className="text-sm text-muted-foreground mb-6 min-h-[40px]">
-                  {org.description || "Açıklama yok"}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Users className="h-4 w-4 mr-2" />
-                    <span>{org.members?.length || 1} üye</span>
-                  </div>
-                  <Badge
-                    variant={
-                      currentUserId === org.managerId ? "default" : "secondary"
-                    }
-                  >
-                    {currentUserId === org.managerId ? "Yönetici" : "Üye"}
-                  </Badge>
-                </div>
-              </CardContent>
-              <div className="px-6 py-4 bg-muted/10 border-t flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-primary hover:text-primary hover:bg-primary/10"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Kart tıklamasını engelle
-                    handleViewOrgDetails(org.id);
-                  }}
-                >
-                  Detayları Görüntüle
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+                      )}
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
 
-      {/* Yeni Organizasyon Dialog */}
+      {/* Yeni organizasyon oluşturma dialog'u */}
       <Dialog open={showNewOrgDialog} onOpenChange={setShowNewOrgDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Yeni Organizasyon</DialogTitle>
+            <DialogTitle>Yeni Organizasyon Oluştur</DialogTitle>
             <DialogDescription>
-              Yeni bir organizasyon oluşturarak takımınızı yönetmeye başlayın.
+              Yeni bir organizasyon oluşturmak için aşağıdaki bilgileri
+              doldurun.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
               <Label htmlFor="name">Organizasyon Adı</Label>
               <Input
                 id="name"
@@ -269,7 +574,7 @@ export default function OrganizationsPage() {
                 placeholder="Organizasyon adını girin"
               />
             </div>
-            <div className="grid gap-2">
+            <div className="space-y-2">
               <Label htmlFor="description">Açıklama</Label>
               <Textarea
                 id="description"
@@ -277,6 +582,31 @@ export default function OrganizationsPage() {
                 onChange={(e) => setNewOrgDesc(e.target.value)}
                 placeholder="Organizasyon açıklamasını girin"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Logo</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {logoOptions.map((logo) => {
+                  const Icon = logo.icon;
+                  return (
+                    <Button
+                      key={logo.name}
+                      type="button"
+                      variant={
+                        selectedLogo === logo.name ? "default" : "outline"
+                      }
+                      className={`p-2 aspect-square ${
+                        selectedLogo === logo.name
+                          ? "bg-violet-600 hover:bg-violet-700"
+                          : "hover:bg-violet-50"
+                      }`}
+                      onClick={() => setSelectedLogo(logo.name)}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -286,51 +616,43 @@ export default function OrganizationsPage() {
             >
               İptal
             </Button>
-            <Button onClick={handleCreateOrg}>Oluştur</Button>
+            <Button
+              onClick={handleCreateOrg}
+              disabled={!newOrgName.trim()}
+              className="bg-violet-600 hover:bg-violet-700"
+            >
+              Oluştur
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Silme Onay Dialog */}
+      {/* Silme onay dialog'u */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-destructive">
-              Organizasyonu Sil
-            </DialogTitle>
-            <DialogDescription className="mt-2">
-              <span className="font-medium">{organizationToDelete?.name}</span>{" "}
-              organizasyonunu silmek istediğinizden emin misiniz? Bu işlem geri
-              alınamaz ve tüm üyelerin erişimi kaldırılacaktır.
+            <DialogTitle>Organizasyonu Sil</DialogTitle>
+            <DialogDescription>
+              Bu organizasyonu silmek istediğinizden emin misiniz? Bu işlem geri
+              alınamaz.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-destructive/5 p-4 rounded-lg border border-destructive/20 mt-2">
-            <div className="flex items-start gap-3">
-              <Trash2 className="h-5 w-5 text-destructive mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-destructive">
-                  Dikkat: Bu işlem geri alınamaz
-                </p>
-                <p className="text-muted-foreground mt-1">
-                  Organizasyon silindikten sonra tüm veriler kalıcı olarak
-                  silinecek ve kurtarılamayacaktır.
-                </p>
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setOrganizationToDelete(null);
+              }}
             >
               İptal
             </Button>
             <Button variant="destructive" onClick={handleDeleteOrg}>
-              Organizasyonu Sil
+              Sil
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }

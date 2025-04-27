@@ -13,18 +13,28 @@ import {
   FileText,
   FileBarChart,
   User,
-  UserPlus,
   ListChecks,
   X,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { useEffect, useState, createContext, useContext } from "react";
 import {
   getUserData,
   getPendingInvitations,
   checkAndPromoteOrganizationManagers,
+  getUserOrganizations,
 } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { motion, AnimatePresence } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 // Sidebar Context oluşturma
 type SidebarContextType = {
@@ -64,6 +74,7 @@ type MenuItem = {
   forAll?: boolean;
   onlyManager?: boolean;
   group: string;
+  badge?: string;
 };
 
 const menuItems: MenuItem[] = [
@@ -90,6 +101,7 @@ const menuItems: MenuItem[] = [
     icon: Inbox,
     onlyManager: true,
     group: "reports",
+    badge: "Yeni",
   },
   {
     title: "Takım Raporları",
@@ -130,13 +142,6 @@ const menuItems: MenuItem[] = [
     forAll: true,
     group: "organization",
   },
-  {
-    title: "Kullanıcılar",
-    href: "/users",
-    icon: UserPlus,
-    onlyManager: true,
-    group: "organization",
-  },
 
   // Kullanıcı ayarları
   {
@@ -159,9 +164,20 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isManager, setIsManager] = useState(false);
+  const [isOrgManager, setIsOrgManager] = useState(false);
   const [hasPendingInvitations, setHasPendingInvitations] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { isOpen, setIsOpen } = useSidebarStore();
+  const [activeGroup, setActiveGroup] = useState<string>("main");
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {
+      main: true,
+      reports: true,
+      tasks: true,
+      organization: true,
+      settings: true,
+    }
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -202,128 +218,174 @@ export function Sidebar() {
     checkUserRole();
   }, []);
 
+  useEffect(() => {
+    const checkUserOrganizationRole = async () => {
+      try {
+        if (auth.currentUser) {
+          // Kullanıcının organizasyonlarını getir
+          const userOrgs = await getUserOrganizations(auth.currentUser.uid);
+
+          // Kullanıcının yönetici olduğu organizasyon var mı kontrol et
+          const hasManagerRole = userOrgs.some(
+            (org) => org.managerId === auth.currentUser?.uid
+          );
+
+          setIsOrgManager(hasManagerRole);
+        }
+      } catch (error) {
+        console.error("Organizasyon bilgileri yüklenirken hata:", error);
+      }
+    };
+
+    checkUserOrganizationRole();
+  }, []);
+
   // Route değiştiğinde mobil menüyü kapat
   useEffect(() => {
     setIsOpen(false);
   }, [pathname, setIsOpen]);
 
-  // Menü öğelerini gruplandır
   const mainItems = menuItems.filter((item) => item.group === "main");
   const reportItems = menuItems.filter((item) => item.group === "reports");
   const taskItems = menuItems.filter((item) => item.group === "tasks");
   const orgItems = menuItems.filter((item) => item.group === "organization");
   const settingsItems = menuItems.filter((item) => item.group === "settings");
 
-  const handleNavigation = (href: string) => {
+  const handleNavigation = (href: string, group: string) => {
     router.push(href);
+    setActiveGroup(group);
     if (isMobile) {
       setIsOpen(false);
     }
   };
 
-  const renderMenuGroup = (items: MenuItem[]) => {
-    return items.map((item: MenuItem) => {
-      // Sadece yöneticilere özel menü itemlarını kontrol et
-      if (item.onlyManager && !isManager) return null;
-      // Herkes için olan menü itemlarını göster
-      if (item.forAll || (item.onlyManager && isManager)) {
-        return (
-          <Button
-            key={item.href}
-            variant={pathname === item.href ? "default" : "ghost"}
-            className={cn(
-              "w-full justify-start gap-2",
-              pathname === item.href && "bg-primary text-primary-foreground"
-            )}
-            onClick={() => handleNavigation(item.href)}
+  const toggleGroup = (group: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [group]: !prev[group],
+    }));
+  };
+
+  const renderMenuGroup = (
+    items: MenuItem[],
+    groupTitle?: string,
+    group?: string
+  ) => {
+    if (!items.length) return null;
+
+    const filteredItems = items.filter(
+      (item) => item.forAll || (item.onlyManager && (isManager || isOrgManager))
+    );
+
+    if (!filteredItems.length) return null;
+
+    const isExpanded = group ? expandedGroups[group] : true;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="mb-4"
+      >
+        {groupTitle && group && (
+          <div
+            className="flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+            onClick={() => toggleGroup(group)}
           >
-            <item.icon className="h-5 w-5" />
-            <span className="flex-1 text-left">{item.title}</span>
-            {item.href === "/invitations" && hasPendingInvitations && (
-              <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span>{groupTitle}</span>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
             )}
-          </Button>
-        );
-      }
-      return null;
-    });
+          </div>
+        )}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {filteredItems.map((item) => (
+                <Button
+                  key={item.href}
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-3 px-3 py-2 text-sm font-medium transition-all duration-200",
+                    pathname === item.href
+                      ? "bg-primary/10 text-primary hover:bg-primary/15"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    "group relative overflow-hidden"
+                  )}
+                  onClick={() => handleNavigation(item.href, item.group)}
+                >
+                  <div className="relative z-10 flex items-center gap-3">
+                    <item.icon
+                      className={cn(
+                        "h-4 w-4",
+                        pathname === item.href
+                          ? "text-primary"
+                          : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    />
+                    <span>{item.title}</span>
+                    {item.badge && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-auto bg-primary/10 text-primary text-xs px-1.5"
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </div>
+                  {pathname === item.href && (
+                    <motion.div
+                      className="absolute inset-0 bg-primary/5"
+                      layoutId="sidebar-active"
+                      transition={{ type: "spring", duration: 0.5 }}
+                    />
+                  )}
+                </Button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
   };
 
   const sidebarContent = (
-    <div className="space-y-6 h-full overflow-y-auto py-4">
-      <div className="space-y-2">{renderMenuGroup(mainItems)}</div>
-
-      {reportItems.some(
-        (item) => item.forAll || (item.onlyManager && isManager)
-      ) && (
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-            RAPORLAR
-          </div>
-          {renderMenuGroup(reportItems)}
-        </div>
-      )}
-
-      {taskItems.some(
-        (item) => item.forAll || (item.onlyManager && isManager)
-      ) && (
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-            GÖREVLER
-          </div>
-          {renderMenuGroup(taskItems)}
-        </div>
-      )}
-
-      {orgItems.some(
-        (item) => item.forAll || (item.onlyManager && isManager)
-      ) && (
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-            ORGANİZASYON
-          </div>
-          {renderMenuGroup(orgItems)}
-        </div>
-      )}
-
-      {settingsItems.some(
-        (item) => item.forAll || (item.onlyManager && isManager)
-      ) && (
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-muted-foreground px-2 mb-1">
-            HESAP
-          </div>
-          {renderMenuGroup(settingsItems)}
-        </div>
-      )}
+    <div className="h-screen flex flex-col gap-2 p-4">
+      <div className="space-y-2">
+        {renderMenuGroup(mainItems)}
+        {renderMenuGroup(reportItems, "Raporlar", "reports")}
+        {renderMenuGroup(taskItems, "Görevler", "tasks")}
+        {renderMenuGroup(orgItems, "Organizasyon", "organization")}
+        {renderMenuGroup(settingsItems, "Ayarlar", "settings")}
+      </div>
     </div>
   );
 
-  // Mobil görünüm için Sheet component'i
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="left" className="p-0 w-72">
-          <SheetTitle className="sr-only">Menü</SheetTitle>
-          <div className="flex justify-end p-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(false)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="px-4">{sidebarContent}</div>
+        <SheetContent side="left" className="w-72 p-0">
+          {sidebarContent}
         </SheetContent>
       </Sheet>
     );
   }
 
-  // Masaüstü görünümü
   return (
-    <div className="hidden lg:block w-64 h-screen bg-background border-r flex-shrink-0 overflow-y-auto">
-      <div className="p-4">{sidebarContent}</div>
-    </div>
+    <motion.div
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className="hidden lg:block w-72 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    >
+      {sidebarContent}
+    </motion.div>
   );
 }

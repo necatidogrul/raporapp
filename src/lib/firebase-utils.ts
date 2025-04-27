@@ -65,6 +65,7 @@ export interface Organization {
   description?: string;
   createdAt: Timestamp;
   members: string[]; // Üye kullanıcı ID'leri
+  logo?: string; // Logo alanını ekledim
 }
 
 // Davetiye tipi
@@ -90,7 +91,6 @@ export async function createReport(data: {
   content: string;
 }) {
   try {
-
     // Kullanıcı kontrolü
     if (!auth.currentUser) {
       throw new Error("Bu işlem için giriş yapmanız gerekiyor");
@@ -137,7 +137,6 @@ export async function createReport(data: {
       },
     };
 
-
     const docRef = await addDoc(collection(db, "reports"), reportData);
 
     // ID'yi dökümanın içine de ekle
@@ -153,15 +152,24 @@ export async function createReport(data: {
 }
 
 // Yöneticiye ait raporları getirme
-export async function getManagerReports(managerId: string) {
+export async function getManagerReports(
+  managerId: string,
+  organizationId?: string
+) {
   try {
-
-    // Tüm raporları getir (hem UNREAD hem de READ olanları)
-    const q = query(
-      collection(db, "reports"),
+    // Temel sorgu koşullarını oluştur
+    let conditions = [
       where("managerId", "==", managerId),
-      orderBy("createdAt", "desc")
-    );
+      orderBy("createdAt", "desc"),
+    ];
+
+    // Eğer organizationId belirtilmişse, filtreye ekle
+    if (organizationId) {
+      conditions.unshift(where("organizationId", "==", organizationId));
+    }
+
+    // Sorguyu oluştur
+    const q = query(collection(db, "reports"), ...conditions);
 
     const querySnapshot = await getDocs(q);
 
@@ -311,31 +319,48 @@ export async function createOrganization(data: {
   name: string;
   description?: string;
   managerId: string;
+  logo?: string; // Logo parametresini ekledim
 }) {
   try {
+    // Kullanıcı kontrolü
     if (!auth.currentUser) {
       throw new Error("Bu işlem için giriş yapmanız gerekiyor");
     }
 
-    // Organizasyon oluştur
-    const orgRef = doc(collection(db, "organizations"));
-    const organization = {
-      id: orgRef.id,
+    // Kullanıcının organizasyon oluşturma yetkisi var mı?
+    const userRef = doc(db, "users", data.managerId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      throw new Error("Kullanıcı bulunamadı");
+    }
+
+    const userData = userSnap.data() as UserData;
+
+    // Organizasyon oluşturma
+    const orgRef = collection(db, "organizations");
+    const docRef = await addDoc(orgRef, {
       name: data.name,
       description: data.description || "",
       managerId: data.managerId,
-      members: [], // Başlangıçta boş üye listesi
       createdAt: Timestamp.now(),
-    };
+      members: [data.managerId], // Yönetici aynı zamanda ilk üye
+      logo: data.logo || "Building", // Logo değerini ekledim, varsayılan olarak Building
+    });
 
-    await setDoc(orgRef, organization);
+    // ID'yi organizasyon objesine ekle
+    await updateDoc(docRef, {
+      id: docRef.id,
+    });
 
-    // Organizasyon oluşturan kullanıcıyı otomatik olarak yönetici yap
-    await updateUserRole(data.managerId, "manager");
+    // Kullanıcının rolünü yönetici olarak güncelle
+    if (userData.role === "user") {
+      await updateDoc(userRef, {
+        role: "manager",
+      });
+    }
 
-    return {
-      ...organization,
-    } as Organization;
+    return docRef.id;
   } catch (error) {
     console.error("Organizasyon oluşturulurken hata:", error);
     throw error;

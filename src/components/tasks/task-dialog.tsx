@@ -1,186 +1,290 @@
 "use client";
 
-import { useState } from "react";
-import { Task } from "@/types/task";
-import { useTaskStore } from "@/store/task-store";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useTaskStore } from "@/store/task-store";
+import { Task, TaskPriority, TaskStatus } from "@/types/task";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { CalendarIcon, PlusIcon, TagIcon, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface TaskDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   task?: Task;
-  mode: "create" | "edit";
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  status?: TaskStatus;
+  mode?: "create" | "edit";
 }
 
 export function TaskDialog({
-  task,
-  mode,
-  open: controlledOpen,
+  open,
   onOpenChange,
+  task,
+  status = "TODO",
+  mode = "create",
 }: TaskDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const addTask = useTaskStore((state) => state.addTask);
   const updateTask = useTaskStore((state) => state.updateTask);
 
-  const isControlled =
-    controlledOpen !== undefined && onOpenChange !== undefined;
-  const open = isControlled ? controlledOpen : uncontrolledOpen;
-  const setOpen = isControlled ? onOpenChange : setUncontrolledOpen;
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
+  const [priority, setPriority] = useState<TaskPriority>(
+    task?.priority || "MEDIUM"
+  );
+  const [dueDate, setDueDate] = useState<Date | undefined>(
+    task?.dueDate ? new Date(task.dueDate) : undefined
+  );
+  const [tags, setTags] = useState<string[]>(task?.tags || []);
+  const [tagInput, setTagInput] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
 
-    const newTask: Task = {
-      id: task?.id || crypto.randomUUID(),
-      userId: task?.userId || "",
-      userName: task?.userName || "",
-      managerId: task?.managerId || "",
-      organizationId: task?.organizationId || "",
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      status: task?.status || "IN_PROGRESS",
-      priority: formData.get("priority") as "LOW" | "MEDIUM" | "HIGH",
-      startDate: new Date(formData.get("startDate") as string),
-      endDate: new Date(formData.get("endDate") as string),
-      dueDate: new Date(formData.get("endDate") as string),
-      createdAt: task?.createdAt || new Date(),
-      updatedAt: new Date(),
-      weeklyReport: task?.weeklyReport || false,
-      weekNumber: task?.weekNumber,
-    };
+    if (!title.trim()) return;
+
+    const now = new Date();
 
     if (mode === "create") {
-      addTask(newTask);
-    } else {
-      updateTask(task!.id, newTask);
+      addTask({
+        id: uuidv4(),
+        title,
+        description,
+        status: status || "TODO",
+        priority,
+        dueDate: dueDate,
+        createdAt: now,
+        updatedAt: now,
+        tags,
+        assignee: null,
+      });
+    } else if (task) {
+      updateTask(task.id, {
+        ...task,
+        title,
+        description,
+        priority,
+        dueDate,
+        updatedAt: now,
+        tags,
+      });
     }
 
-    setOpen(false);
+    resetForm();
+    onOpenChange(false);
   };
 
-  const today = new Date().toISOString().split("T")[0];
-  const defaultStartDate = task?.startDate
-    ? format(task.startDate, "yyyy-MM-dd")
-    : today;
-  const defaultEndDate = task?.endDate
-    ? format(task.endDate, "yyyy-MM-dd")
-    : today;
+  const resetForm = () => {
+    if (mode === "create") {
+      setTitle("");
+      setDescription("");
+      setPriority("MEDIUM");
+      setDueDate(undefined);
+      setTags([]);
+    }
+    setTagInput("");
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {!isControlled && (
-        <DialogTrigger asChild>
-          {mode === "create" ? (
-            <Button>
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Yeni Görev
-            </Button>
-          ) : (
-            <Button variant="ghost" size="icon">
-              <PlusIcon className="w-4 h-4" />
-            </Button>
-          )}
-        </DialogTrigger>
-      )}
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Yeni Görev" : "Görevi Düzenle"}
+            {mode === "create" ? "Yeni Görev Oluştur" : "Görevi Düzenle"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="title" className="text-sm font-medium">
-              Başlık
-            </label>
-            <input
-              type="text"
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <div className="space-y-2">
+            <Label htmlFor="title">Başlık</Label>
+            <Input
               id="title"
-              name="title"
-              defaultValue={task?.title}
-              className="w-full px-3 py-2 border rounded-md"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Görev başlığı"
+              autoFocus
               required
             />
           </div>
-          <div>
-            <label htmlFor="description" className="text-sm font-medium">
-              Açıklama
-            </label>
-            <textarea
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Açıklama</Label>
+            <Textarea
               id="description"
-              name="description"
-              defaultValue={task?.description}
-              className="w-full px-3 py-2 border rounded-md"
-              rows={3}
-              required
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Görev açıklaması"
+              className="min-h-[100px]"
             />
           </div>
-          <div>
-            <label htmlFor="priority" className="text-sm font-medium">
-              Öncelik
-            </label>
-            <select
-              id="priority"
-              name="priority"
-              defaultValue={task?.priority || "MEDIUM"}
-              className="w-full px-3 py-2 border rounded-md"
-              required
-            >
-              <option value="LOW">Düşük</option>
-              <option value="MEDIUM">Orta</option>
-              <option value="HIGH">Yüksek</option>
-            </select>
-          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="startDate" className="text-sm font-medium">
-                Başlangıç Tarihi
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                defaultValue={defaultStartDate}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
+            <div className="space-y-2">
+              <Label>Öncelik</Label>
+              <RadioGroup
+                value={priority}
+                onValueChange={(value) => setPriority(value as TaskPriority)}
+                className="grid grid-cols-1 gap-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="LOW" id="r1" />
+                  <Label htmlFor="r1" className="text-sm font-normal">
+                    Düşük
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="MEDIUM" id="r2" />
+                  <Label htmlFor="r2" className="text-sm font-normal">
+                    Orta
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="HIGH" id="r3" />
+                  <Label htmlFor="r3" className="text-sm font-normal">
+                    Yüksek
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="URGENT" id="r4" />
+                  <Label htmlFor="r4" className="text-sm font-normal">
+                    Acil
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
-            <div>
-              <label htmlFor="endDate" className="text-sm font-medium">
-                Bitiş Tarihi
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                defaultValue={defaultEndDate}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-              />
+
+            <div className="space-y-2">
+              <Label>Bitiş Tarihi</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dueDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dueDate ? (
+                      format(dueDate, "PPP", { locale: tr })
+                    ) : (
+                      <span>Tarih seç</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dueDate}
+                    onSelect={setDueDate}
+                    initialFocus
+                    locale={tr}
+                  />
+                </PopoverContent>
+              </Popover>
+              {dueDate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 h-7 text-xs"
+                  onClick={() => setDueDate(undefined)}
+                >
+                  <X className="mr-1 h-3 w-3" />
+                  Tarihi temizle
+                </Button>
+              )}
             </div>
           </div>
-          <div className="flex justify-end gap-2">
+
+          <div className="space-y-2">
+            <Label>Etiketler</Label>
+            <div className="flex gap-2">
+              <div className="relative flex-grow">
+                <TagIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-8"
+                  placeholder="Etiket ekle"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+              <Button type="button" size="icon" onClick={handleAddTag}>
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="bg-secondary text-secondary-foreground px-2.5 py-0.5 rounded-full text-xs flex items-center gap-1"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="h-3.5 w-3.5 rounded-full text-muted-foreground hover:text-primary hover:bg-secondary flex items-center justify-center"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                resetForm();
+                onOpenChange(false);
+              }}
             >
               İptal
             </Button>
             <Button type="submit">
-              {mode === "create" ? "Oluştur" : "Güncelle"}
+              {mode === "create" ? "Oluştur" : "Kaydet"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
