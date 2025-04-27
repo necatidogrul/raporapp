@@ -1,6 +1,6 @@
 "use client";
 
-import { Task, TaskPriority } from "@/types/task";
+import { Task } from "@/types/task";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import {
   EditIcon,
   GripIcon,
   MoreHorizontalIcon,
-  TagIcon,
   TrashIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -112,14 +111,6 @@ export function TaskCard({ task }: TaskCardProps) {
             {priorityConfig[task.priority].icon}
             {priorityConfig[task.priority].label}
           </span>
-
-          {task.tags && task.tags.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full text-purple-500 bg-purple-50 border border-purple-200">
-              <TagIcon className="h-3 w-3" />
-              {task.tags[0]}
-              {task.tags.length > 1 && <span>+{task.tags.length - 1}</span>}
-            </span>
-          )}
         </div>
 
         {task.dueDate && (

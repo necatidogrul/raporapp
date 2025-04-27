@@ -61,7 +61,9 @@ export function KanbanBoard({ hideHeader = false }: KanbanBoardProps) {
   const tasks = useTaskStore((state) => state.tasks);
   const updateTask = useTaskStore((state) => state.updateTask);
   const [showNewTaskDialog, setShowNewTaskDialog] = useState(false);
-  const [selectedColumn, setSelectedColumn] = useState<TaskStatus | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<TaskStatus | undefined>(
+    undefined
+  );
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -184,11 +186,11 @@ export function KanbanBoard({ hideHeader = false }: KanbanBoardProps) {
 
       <TaskDialog
         mode="create"
-        initialStatus={selectedColumn}
+        status={selectedColumn}
         open={showNewTaskDialog}
         onOpenChange={(open) => {
           setShowNewTaskDialog(open);
-          if (!open) setSelectedColumn(null);
+          if (!open) setSelectedColumn(undefined);
         }}
       />
     </div>

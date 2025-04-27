@@ -63,29 +63,21 @@ export function TaskManager() {
     fetchUserData();
   }, []);
 
-  useEffect(() => {
-    // Tamamlanma oranı için progress bar
-    const completionRate =
-      tasks.length > 0
-        ? Math.round((completedTasks.length / tasks.length) * 100)
-        : 0;
+  // Görev istatistikleri
+  const completedTasks = tasks.filter((task) => task.status === "COMPLETED");
+  const inProgressTasks = tasks.filter((task) => task.status === "IN_PROGRESS");
+  const completionRate =
+    tasks.length > 0
+      ? Math.round((completedTasks.length / tasks.length) * 100)
+      : 0;
 
+  useEffect(() => {
     const timer = setTimeout(() => {
       setProgressValue(completionRate);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [tasks]);
-
-  // Görev istatistikleri
-  const completedTasks = tasks.filter((task) => task.status === "COMPLETED");
-  const inProgressTasks = tasks.filter((task) => task.status === "IN_PROGRESS");
-  const pendingTasks = tasks.filter((task) => task.status === "PENDING");
-
-  const completionRate =
-    tasks.length > 0
-      ? Math.round((completedTasks.length / tasks.length) * 100)
-      : 0;
+  }, [completionRate]);
 
   return (
     <motion.div
@@ -183,7 +175,9 @@ export function TaskManager() {
         <motion.div variants={fadeIn} whileHover={{ scale: 1.02 }}>
           <Card className="overflow-hidden border-l-4 border-l-violet-500 shadow-lg hover:shadow-xl transition-all duration-200 bg-background/80 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-violet-50/50 dark:bg-violet-950/20">
-              <CardTitle className="text-sm font-medium">Toplam Görev</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Toplam Görev
+              </CardTitle>
               <motion.div
                 whileHover={{ rotate: 15 }}
                 className="rounded-full bg-violet-100 p-2"

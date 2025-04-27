@@ -25,7 +25,7 @@ import { Loader } from "@/components/ui/loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getUserData } from "@/lib/firebase-utils";
 import { Progress } from "@/components/ui/progress";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 10 },
@@ -139,7 +139,6 @@ export default function ReportsPage() {
   }, [reports]);
 
   // Rapor istatistikleri
-  const draftReports = reports.filter((report) => report.status === "DRAFT");
   const submittedReports = reports.filter(
     (report) => report.status === "SUBMITTED"
   );

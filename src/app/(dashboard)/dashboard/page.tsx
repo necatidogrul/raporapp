@@ -20,7 +20,6 @@ import { auth } from "@/lib/firebase";
 import { getUserData } from "@/lib/firebase-utils";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 10 },
@@ -38,6 +37,14 @@ export default function DashboardPage() {
   const tasks = useTaskStore((state) => state.tasks);
   const [userName, setUserName] = useState<string>("");
   const [progressValue, setProgressValue] = useState<number>(0);
+  const completedTasks = tasks.filter((task) => task.status === "COMPLETED");
+  const inProgressTasks = tasks.filter((task) => task.status === "IN_PROGRESS");
+  const recentTasks = [...tasks]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, 3);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -63,16 +70,7 @@ export default function DashboardPage() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [tasks]);
-
-  const completedTasks = tasks.filter((task) => task.status === "COMPLETED");
-  const inProgressTasks = tasks.filter((task) => task.status === "IN_PROGRESS");
-  const recentTasks = [...tasks]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .slice(0, 3);
+  }, [tasks, completedTasks.length]);
 
   const completionRate =
     tasks.length > 0

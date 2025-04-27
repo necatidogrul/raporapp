@@ -11,7 +11,6 @@ import {
   PencilIcon,
   TrashIcon,
   Calendar,
-  Tag,
   ArrowUpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +42,7 @@ export function TaskList() {
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const [taskToEdit, setTaskToEdit] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const selectedTask = tasks.find((task) => task.id === taskToEdit);
 
   const toggleStatus = (taskId: string, currentStatus: TaskStatus) => {
     const newStatus: TaskStatus =
@@ -72,9 +72,9 @@ export function TaskList() {
             <ClockIcon className="h-6 w-6 text-violet-600" />
           </div>
           <h3 className="text-lg font-medium">Henüz görev eklenmemiş</h3>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            "Yeni Görev" butonuna tıklayarak görevlerinizi eklemeye
-            başlayabilirsiniz.
+          <p className="text-muted-foreground text-sm">
+            &quot;Yeni Görev&quot; butonuna tıklayarak yeni görev
+            ekleyebilirsiniz
           </p>
         </div>
       </div>
@@ -210,7 +210,7 @@ export function TaskList() {
       {taskToEdit && (
         <TaskDialog
           mode="edit"
-          taskId={taskToEdit}
+          task={selectedTask}
           open={showEditDialog}
           onOpenChange={(open) => {
             setShowEditDialog(open);

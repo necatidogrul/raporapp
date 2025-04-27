@@ -158,7 +158,7 @@ export async function getManagerReports(
 ) {
   try {
     // Temel sorgu koşullarını oluştur
-    let conditions = [
+    const conditions = [
       where("managerId", "==", managerId),
       orderBy("createdAt", "desc"),
     ];

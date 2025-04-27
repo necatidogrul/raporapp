@@ -53,10 +53,8 @@ import { toast } from "sonner";
 import { getManagerReports, getUserOrganizations } from "@/lib/firebase-utils";
 import type { Report as FirebaseReport } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
-import type { Report } from "@/types/report";
 import { Loader } from "@/components/ui/loader";
-import { motion, AnimatePresence } from "framer-motion";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
 
 interface Organization {
   id: string;

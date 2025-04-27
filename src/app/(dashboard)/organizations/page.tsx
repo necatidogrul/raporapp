@@ -34,16 +34,10 @@ import {
   ArrowRight,
   Trash2,
   Building2,
-  UserIcon,
-  BuildingIcon,
   UsersIcon,
   UserPlusIcon,
-  LayoutDashboardIcon,
-  TrendingUpIcon,
-  ArrowUpIcon,
   ShieldIcon,
   CircleCheckIcon,
-  CircleDashedIcon,
   LandmarkIcon,
   NetworkIcon,
   GitMergeIcon,
@@ -93,7 +87,6 @@ export default function OrganizationsPage() {
   const [organizationToDelete, setOrganizationToDelete] =
     useState<Organization | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>("");
   const [progressValue, setProgressValue] = useState<number>(0);
   const [selectedLogo, setSelectedLogo] = useState<string>("Building");
   const router = useRouter();
@@ -116,16 +109,16 @@ export default function OrganizationsPage() {
         setCurrentUserId(user.uid);
         loadOrganizations(user.uid);
 
-        // Kullanıcı bilgilerini getir
-        const fetchUserData = async () => {
-          if (user) {
-            const userData = await getUserData(user.uid);
-            if (userData) {
-              setUserName(userData.name);
-            }
+        const checkUserAndLoadData = async () => {
+          try {
+            await getUserData(user.uid);
+          } catch (error) {
+            console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+            toast.error("Kullanıcı bilgileri yüklenirken bir hata oluştu");
           }
         };
-        fetchUserData();
+
+        checkUserAndLoadData();
       } else {
         setCurrentUserId(null);
         setOrganizations([]);
@@ -208,7 +201,6 @@ export default function OrganizationsPage() {
     }
   };
 
-  // Logo seçeneklerini tanımlayacağım - ikonlarla eşleştirilmiş
   const logoOptions = [
     { name: "Building", icon: Building, color: "indigo" },
     { name: "Landmark", icon: LandmarkIcon, color: "indigo" },
@@ -228,9 +220,6 @@ export default function OrganizationsPage() {
     { name: "Boxes", icon: Boxes, color: "indigo" },
   ];
 
-  // İkon listesini logoOptions'dan otomatik oluşturuyoruz
-  const orgIcons = logoOptions.map((logo) => logo.icon);
-
   if (loading) {
     return <Loader className="p-8" />;
   }
@@ -243,32 +232,8 @@ export default function OrganizationsPage() {
   const memberOnlyOrgs = organizations.filter(
     (org) => org.managerId !== currentUserId
   );
-  const totalMembers = organizations.reduce(
-    (total, org) => total + (org.members?.length || 1),
-    0
-  );
   const managedRate =
     totalOrgs > 0 ? Math.round((managedOrgs.length / totalOrgs) * 100) : 0;
-
-  // Organizasyonları rastgele bir özelliklerle zenginleştirelim
-  const organizationsWithExtras = organizations.map((org, index) => {
-    // İkon adını organizasyondan al veya varsayılan olarak indekse göre kullan
-    const logoName = org.logo || orgIcons[index % orgIcons.length].name;
-
-    // Logo adına göre ikon bulma
-    const logoObj = logoOptions.find((l) => l.name === logoName) ||
-      logoOptions.find((l) => l.name === "Building") || {
-        name: "Building",
-        icon: Building,
-        color: "indigo",
-      };
-
-    return {
-      ...org,
-      icon: logoObj.icon,
-      color: logoObj.color,
-    };
-  });
 
   return (
     <motion.div initial="initial" animate="animate" className="p-6 space-y-8">

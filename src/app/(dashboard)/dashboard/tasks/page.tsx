@@ -4,15 +4,17 @@ import { useTaskStore } from "@/store/task-store";
 import { TaskCard } from "@/components/tasks/task-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskDialog } from "@/components/tasks/task-dialog";
+import { useState } from "react";
 
 export default function TasksPage() {
   const tasks = useTaskStore((state) => state.tasks);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="container py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Görevler</h1>
-        <TaskDialog mode="create" />
+        <TaskDialog mode="create" open={open} onOpenChange={setOpen} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

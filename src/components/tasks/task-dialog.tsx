@@ -15,7 +15,7 @@ import { useTaskStore } from "@/store/task-store";
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { CalendarIcon, PlusIcon, TagIcon, X } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -39,7 +39,7 @@ export function TaskDialog({
   open,
   onOpenChange,
   task,
-  status = "TODO",
+  status = "PENDING",
   mode = "create",
 }: TaskDialogProps) {
   const addTask = useTaskStore((state) => state.addTask);
@@ -50,11 +50,9 @@ export function TaskDialog({
   const [priority, setPriority] = useState<TaskPriority>(
     task?.priority || "MEDIUM"
   );
-  const [dueDate, setDueDate] = useState<Date | undefined>(
-    task?.dueDate ? new Date(task.dueDate) : undefined
+  const [dueDate, setDueDate] = useState<Date>(
+    task?.dueDate ? new Date(task.dueDate) : new Date()
   );
-  const [tags, setTags] = useState<string[]>(task?.tags || []);
-  const [tagInput, setTagInput] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,23 +66,25 @@ export function TaskDialog({
         id: uuidv4(),
         title,
         description,
-        status: status || "TODO",
+        status: status,
         priority,
         dueDate: dueDate,
         createdAt: now,
         updatedAt: now,
-        tags,
-        assignee: null,
+        userId: "", // Bu değerleri nereden alacağımızı belirlemeliyiz
+        userName: "",
+        managerId: "",
+        organizationId: "",
+        startDate: now,
+        endDate: dueDate,
       });
     } else if (task) {
       updateTask(task.id, {
-        ...task,
         title,
         description,
         priority,
         dueDate,
         updatedAt: now,
-        tags,
       });
     }
 
@@ -97,28 +97,8 @@ export function TaskDialog({
       setTitle("");
       setDescription("");
       setPriority("MEDIUM");
-      setDueDate(undefined);
-      setTags([]);
+      setDueDate(new Date());
     }
-    setTagInput("");
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   return (
@@ -179,12 +159,6 @@ export function TaskDialog({
                     Yüksek
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="URGENT" id="r4" />
-                  <Label htmlFor="r4" className="text-sm font-normal">
-                    Acil
-                  </Label>
-                </div>
               </RadioGroup>
             </div>
 
@@ -211,63 +185,12 @@ export function TaskDialog({
                   <Calendar
                     mode="single"
                     selected={dueDate}
-                    onSelect={setDueDate}
+                    onSelect={(date) => date && setDueDate(date)}
                     initialFocus
-                    locale={tr}
                   />
                 </PopoverContent>
               </Popover>
-              {dueDate && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-1 h-7 text-xs"
-                  onClick={() => setDueDate(undefined)}
-                >
-                  <X className="mr-1 h-3 w-3" />
-                  Tarihi temizle
-                </Button>
-              )}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Etiketler</Label>
-            <div className="flex gap-2">
-              <div className="relative flex-grow">
-                <TagIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  className="pl-8"
-                  placeholder="Etiket ekle"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-              </div>
-              <Button type="button" size="icon" onClick={handleAddTag}>
-                <PlusIcon className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => (
-                  <div
-                    key={tag}
-                    className="bg-secondary text-secondary-foreground px-2.5 py-0.5 rounded-full text-xs flex items-center gap-1"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag)}
-                      className="h-3.5 w-3.5 rounded-full text-muted-foreground hover:text-primary hover:bg-secondary flex items-center justify-center"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           <DialogFooter>

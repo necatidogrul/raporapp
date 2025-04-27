@@ -2,17 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import {
-  Moon,
-  Sun,
-  LogOut,
-  User,
-  Menu,
-  Search,
-  Sparkles,
-  Bell,
-  Settings,
-} from "lucide-react";
+import { Moon, Sun, LogOut, User, Menu, Settings } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -28,7 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { FileText } from "lucide-react";
 import { NotificationDrawer } from "@/components/notifications/NotificationDrawer";
@@ -46,18 +35,6 @@ export function Navbar() {
   const [userName, setUserName] = useState<string>("");
   const [userInitials, setUserInitials] = useState<string>("");
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {

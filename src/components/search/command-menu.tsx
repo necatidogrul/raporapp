@@ -6,7 +6,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -89,9 +88,9 @@ export function CommandMenu() {
 
   const DynamicIcon = ({ name }: { name?: string }) => {
     if (!name) return null;
-    const IconComponent = (Icons as any)[
-      name.charAt(0).toUpperCase() + name.slice(1)
-    ];
+    const IconComponent = (
+      Icons as unknown as { [key: string]: React.FC<{ className?: string }> }
+    )[name.charAt(0).toUpperCase() + name.slice(1)];
     return IconComponent ? <IconComponent className="mr-2 h-4 w-4" /> : null;
   };
 

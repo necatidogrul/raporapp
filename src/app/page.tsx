@@ -2,8 +2,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
-  Calendar,
-  ClipboardCheck,
   Users,
   CheckCircle,
   Clock,
@@ -13,12 +11,6 @@ import {
   Play,
   ArrowUpRight,
   Sparkles,
-  Target,
-  Rocket,
-  LineChart,
-  MessageSquare,
-  Bell,
-  Settings,
   Layers,
   GitBranch as Workflow,
   Lightbulb,
@@ -50,7 +42,7 @@ export default function Home() {
             <div className="flex items-center gap-2 sm:gap-4 md:gap-8">
               <Link
                 href="/login"
-                className="text-sm sm:text-base text-gray-600 hover:text-gray-900 transition-colors font-medium whitespace-nowrap hover:scale-105 transform transition-transform"
+                className="text-sm sm:text-base text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap hover:scale-105 transition-all duration-300"
               >
                 Giriş Yap
               </Link>
@@ -138,7 +130,7 @@ export default function Home() {
               </div>
             </div>
             <div className="relative">
-              <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100/50 hover:shadow-3xl transition-shadow duration-300 transform hover:scale-[1.02] transition-transform">
+              <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100/50 hover:shadow-3xl hover:scale-[1.02] transition-all duration-300">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600" />
                 <div className="p-8">
                   <div className="flex items-center justify-between mb-8">
@@ -187,7 +179,7 @@ export default function Home() {
                     ].map((stat, i) => (
                       <div
                         key={i}
-                        className="group relative bg-gradient-to-r from-gray-50 to-transparent p-6 rounded-2xl hover:from-gray-100 transition-colors cursor-pointer hover:scale-[1.02] transform transition-transform"
+                        className="group relative bg-gradient-to-r from-gray-50 to-transparent p-6 rounded-2xl hover:from-gray-100 hover:scale-[1.02] transition-all duration-300"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">

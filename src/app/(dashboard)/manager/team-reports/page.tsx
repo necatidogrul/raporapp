@@ -18,7 +18,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import {
   Select,
@@ -29,10 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-  FileTextIcon,
   CheckIcon,
-  XIcon,
-  AlertTriangleIcon,
   CalendarIcon,
   RefreshCw,
   UsersIcon,
@@ -41,7 +37,6 @@ import {
   Building2,
   BarChart3,
   Clock,
-  Filter,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -57,7 +52,6 @@ import {
 } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Loader } from "@/components/ui/loader";
 import { motion, AnimatePresence } from "framer-motion";
@@ -229,7 +223,17 @@ export default function TeamReportsPage() {
     };
 
     loadMembersAndReports();
-  }, [selectedOrg, calculateStats]);
+  }, [selectedOrg, calculateStats, reports.length]);
+
+  useEffect(() => {
+    // Raporlar değiştiğinde istatistikleri güncelle
+    const completedCount = reports.filter(
+      (report) => report.status === "APPROVED"
+    ).length;
+    const percentage =
+      reports.length > 0 ? (completedCount / reports.length) * 100 : 0;
+    setStats((prevStats) => ({ ...prevStats, completionRate: percentage }));
+  }, [reports]);
 
   const handleRefresh = async () => {
     if (!selectedOrg || !auth.currentUser) return;
@@ -338,24 +342,6 @@ export default function TeamReportsPage() {
         return <Badge variant="destructive">Reddedildi</Badge>;
       default:
         return <Badge variant="outline">Bilinmiyor</Badge>;
-    }
-  };
-
-  // Rapor durumuna göre icon oluştur
-  const getStatusIcon = (status: string | undefined) => {
-    switch (status) {
-      case "NOT_SUBMITTED":
-        return <AlertTriangleIcon className="h-5 w-5 text-gray-400" />;
-      case "UNREAD":
-      case "READ":
-      case "SUBMITTED":
-        return <FileTextIcon className="h-5 w-5 text-blue-500" />;
-      case "APPROVED":
-        return <CheckIcon className="h-5 w-5 text-green-500" />;
-      case "REJECTED":
-        return <XIcon className="h-5 w-5 text-red-500" />;
-      default:
-        return <FileTextIcon className="h-5 w-5 text-gray-400" />;
     }
   };
 

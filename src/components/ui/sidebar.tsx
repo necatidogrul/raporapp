@@ -14,10 +14,8 @@ import {
   FileBarChart,
   User,
   ListChecks,
-  X,
   ChevronDown,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 import { useEffect, useState, createContext, useContext } from "react";
 import {
@@ -27,12 +25,7 @@ import {
   getUserOrganizations,
 } from "@/lib/firebase-utils";
 import { auth } from "@/lib/firebase";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -165,10 +158,8 @@ export function Sidebar() {
   const router = useRouter();
   const [isManager, setIsManager] = useState(false);
   const [isOrgManager, setIsOrgManager] = useState(false);
-  const [hasPendingInvitations, setHasPendingInvitations] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { isOpen, setIsOpen } = useSidebarStore();
-  const [activeGroup, setActiveGroup] = useState<string>("main");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
       main: true,
@@ -208,7 +199,7 @@ export function Sidebar() {
 
           // Bekleyen davetiyeleri kontrol et
           const invitations = await getPendingInvitations(auth.currentUser.uid);
-          setHasPendingInvitations(invitations.length > 0);
+          setIsOrgManager(invitations.length > 0);
         }
       } catch (error) {
         console.error("Kullanıcı bilgileri yüklenirken hata:", error);
@@ -251,9 +242,8 @@ export function Sidebar() {
   const orgItems = menuItems.filter((item) => item.group === "organization");
   const settingsItems = menuItems.filter((item) => item.group === "settings");
 
-  const handleNavigation = (href: string, group: string) => {
+  const handleNavigation = (href: string) => {
     router.push(href);
-    setActiveGroup(group);
     if (isMobile) {
       setIsOpen(false);
     }
@@ -320,7 +310,7 @@ export function Sidebar() {
                       : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                     "group relative overflow-hidden"
                   )}
-                  onClick={() => handleNavigation(item.href, item.group)}
+                  onClick={() => handleNavigation(item.href)}
                 >
                   <div className="relative z-10 flex items-center gap-3">
                     <item.icon
