@@ -13,7 +13,6 @@ import {
   BarChart3Icon,
   ArrowUpIcon,
   TrendingUpIcon,
-  CalendarIcon,
   Sparkles,
 } from "lucide-react";
 import { auth } from "@/lib/firebase";
@@ -83,10 +82,10 @@ export default function DashboardPage() {
         initial="initial"
         animate="animate"
         variants={fadeInUp}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-background border shadow-lg"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-background border shadow-lg dark:from-primary/10 dark:via-primary/5 dark:to-background/50 dark:border-gray-800"
       >
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(56,189,248,0.1),rgba(168,85,247,0.1))]" />
-        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(56,189,248,0.1),rgba(168,85,247,0.1))] dark:bg-[linear-gradient(90deg,rgba(56,189,248,0.05),rgba(168,85,247,0.05))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black,transparent)]" />
         <div className="relative flex flex-col gap-3 sm:gap-4 p-4 sm:p-6 md:p-8">
           <div className="space-y-1 sm:space-y-2">
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -100,9 +99,9 @@ export default function DashboardPage() {
             </p>
           </div>
           {userName && (
-            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm bg-background/80 backdrop-blur-sm py-1.5 sm:py-2 px-3 sm:px-4 rounded-full shadow-lg border transition-all hover:bg-background/90 self-start">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm bg-background/80 dark:bg-gray-800/80 backdrop-blur-sm py-1.5 sm:py-2 px-3 sm:px-4 rounded-full shadow-lg border dark:border-gray-700 transition-all hover:bg-background/90 dark:hover:bg-gray-800/90 self-start">
               <UserIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
-              <span className="font-medium truncate max-w-[150px]">
+              <span className="font-medium truncate max-w-[150px] dark:text-gray-200">
                 {userName}
               </span>
             </div>
@@ -115,12 +114,12 @@ export default function DashboardPage() {
           {...scaleIn}
           className="col-span-2 sm:col-span-1 transition-transform duration-200 hover:scale-[1.02]"
         >
-          <Card className="overflow-hidden border-l-4 border-l-primary shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 px-3 sm:px-4 pt-2 sm:pt-3">
-              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate">
+          <Card className="overflow-hidden border-l-4 border-l-primary shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800/50 dark:border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 dark:bg-gray-800/50 px-3 sm:px-4 pt-2 sm:pt-3">
+              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate dark:text-gray-200">
                 Toplam Task
               </CardTitle>
-              <div className="rounded-full bg-primary/10 p-1 sm:p-1.5 md:p-2 shrink-0">
+              <div className="rounded-full bg-primary/10 dark:bg-primary/20 p-1 sm:p-1.5 md:p-2 shrink-0">
                 <ListTodoIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
               </div>
             </CardHeader>
@@ -140,37 +139,12 @@ export default function DashboardPage() {
           {...scaleIn}
           className="transition-transform duration-200 hover:scale-[1.02]"
         >
-          <Card className="overflow-hidden border-l-4 border-l-green-500 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 px-3 sm:px-4 pt-2 sm:pt-3">
-              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate">
-                Tamamlanan
-              </CardTitle>
-              <div className="rounded-full bg-green-100 p-1 sm:p-1.5 md:p-2 shrink-0">
-                <CheckCircle2Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-green-500" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2 sm:pt-3 md:pt-4 px-3 sm:px-4">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-500 to-green-600 text-transparent bg-clip-text">
-                {completedTasks.length}
-              </div>
-              <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mt-0.5 sm:mt-1 flex items-center">
-                <ArrowUpIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-green-500 shrink-0" />
-                <span className="truncate">Tamamlanan görevler</span>
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          {...scaleIn}
-          className="transition-transform duration-200 hover:scale-[1.02]"
-        >
-          <Card className="overflow-hidden border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 px-3 sm:px-4 pt-2 sm:pt-3">
-              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate">
+          <Card className="overflow-hidden border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800/50 dark:border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 dark:bg-gray-800/50 px-3 sm:px-4 pt-2 sm:pt-3">
+              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate dark:text-gray-200">
                 Devam Eden
               </CardTitle>
-              <div className="rounded-full bg-blue-100 p-1 sm:p-1.5 md:p-2 shrink-0">
+              <div className="rounded-full bg-blue-100 dark:bg-blue-900/20 p-1 sm:p-1.5 md:p-2 shrink-0">
                 <CircleDotIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-500" />
               </div>
             </CardHeader>
@@ -179,7 +153,7 @@ export default function DashboardPage() {
                 {inProgressTasks.length}
               </div>
               <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mt-0.5 sm:mt-1 flex items-center">
-                <CalendarIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-blue-500 shrink-0" />
+                <ArrowUpIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-blue-500 shrink-0" />
                 <span className="truncate">Devam eden görevler</span>
               </p>
             </CardContent>
@@ -190,12 +164,37 @@ export default function DashboardPage() {
           {...scaleIn}
           className="transition-transform duration-200 hover:scale-[1.02]"
         >
-          <Card className="overflow-hidden border-l-4 border-l-amber-500 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 px-3 sm:px-4 pt-2 sm:pt-3">
-              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate">
+          <Card className="overflow-hidden border-l-4 border-l-emerald-500 shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800/50 dark:border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 dark:bg-gray-800/50 px-3 sm:px-4 pt-2 sm:pt-3">
+              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate dark:text-gray-200">
+                Tamamlanan
+              </CardTitle>
+              <div className="rounded-full bg-emerald-100 dark:bg-emerald-900/20 p-1 sm:p-1.5 md:p-2 shrink-0">
+                <CheckCircle2Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-emerald-500" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2 sm:pt-3 md:pt-4 px-3 sm:px-4">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 text-transparent bg-clip-text">
+                {completedTasks.length}
+              </div>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mt-0.5 sm:mt-1 flex items-center">
+                <ArrowUpIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 text-emerald-500 shrink-0" />
+                <span className="truncate">Tamamlanan görevler</span>
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          {...scaleIn}
+          className="transition-transform duration-200 hover:scale-[1.02]"
+        >
+          <Card className="overflow-hidden border-l-4 border-l-amber-500 shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800/50 dark:border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 bg-muted/30 dark:bg-gray-800/50 px-3 sm:px-4 pt-2 sm:pt-3">
+              <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate dark:text-gray-200">
                 Tamamlanma Oranı
               </CardTitle>
-              <div className="rounded-full bg-amber-100 p-1 sm:p-1.5 md:p-2 shrink-0">
+              <div className="rounded-full bg-amber-100 dark:bg-amber-900/20 p-1 sm:p-1.5 md:p-2 shrink-0">
                 <BarChart3Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-amber-500" />
               </div>
             </CardHeader>
@@ -206,7 +205,7 @@ export default function DashboardPage() {
               <div className="mt-1.5 sm:mt-2">
                 <Progress
                   value={progressValue}
-                  className="h-1 sm:h-1.5 md:h-2"
+                  className="h-1 sm:h-1.5 md:h-2 dark:bg-gray-700"
                 />
               </div>
             </CardContent>
@@ -218,7 +217,9 @@ export default function DashboardPage() {
         <motion.div {...fadeInUp} className="space-y-3 sm:space-y-4">
           <div className="flex items-center gap-1.5 sm:gap-2 px-1">
             <ClockIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-            <h2 className="text-base sm:text-lg font-semibold">Son Görevler</h2>
+            <h2 className="text-base sm:text-lg font-semibold dark:text-gray-200">
+              Son Görevler
+            </h2>
           </div>
           <div className="grid gap-2 sm:gap-4">
             {recentTasks.map((task) => (

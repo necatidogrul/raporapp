@@ -12,6 +12,8 @@ import {
   TrashIcon,
   Calendar,
   ArrowUpCircle,
+  CheckIcon,
+  UndoIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task";
@@ -66,13 +68,15 @@ export function TaskList() {
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-12 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-dashed">
+      <div className="text-center py-12 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-dashed dark:border-gray-700">
         <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="h-12 w-12 rounded-full bg-violet-100 flex items-center justify-center">
-            <ClockIcon className="h-6 w-6 text-violet-600" />
+          <div className="h-12 w-12 rounded-full bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center">
+            <ClockIcon className="h-6 w-6 text-violet-600 dark:text-violet-400" />
           </div>
-          <h3 className="text-lg font-medium">Henüz görev eklenmemiş</h3>
-          <p className="text-muted-foreground text-sm">
+          <h3 className="text-lg font-medium dark:text-gray-200">
+            Henüz görev eklenmemiş
+          </h3>
+          <p className="text-muted-foreground text-sm dark:text-gray-400">
             &quot;Yeni Görev&quot; butonuna tıklayarak yeni görev
             ekleyebilirsiniz
           </p>
@@ -83,7 +87,7 @@ export function TaskList() {
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto rounded-lg border dark:border-gray-700">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50">
@@ -107,11 +111,11 @@ export function TaskList() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {tasks.map((task) => (
               <tr
                 key={task.id}
-                className="border-b hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors group"
+                className="border-b dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors group"
               >
                 <td className="py-3 px-4">
                   <div
@@ -128,7 +132,9 @@ export function TaskList() {
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  <div className="font-medium">{task.title}</div>
+                  <div className="font-medium dark:text-gray-200">
+                    {task.title}
+                  </div>
                   <div className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                     {task.description || "Açıklama yok"}
                   </div>
@@ -165,12 +171,12 @@ export function TaskList() {
                     {format(task.endDate, "d MMM yyyy", { locale: tr })}
                   </div>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="flex justify-center gap-2">
+                <td className="py-3 px-4 text-center">
+                  <div className="flex items-center justify-center gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-60 group-hover:opacity-100 text-slate-600 hover:text-violet-700 hover:bg-violet-50"
+                      className="h-8 w-8 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
                       onClick={() => handleEditTask(task.id)}
                     >
                       <PencilIcon className="h-4 w-4" />
@@ -178,7 +184,7 @@ export function TaskList() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 opacity-60 group-hover:opacity-100 text-slate-600 hover:text-rose-700 hover:bg-rose-50"
+                      className="h-8 w-8 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
                       onClick={() => deleteTask(task.id)}
                     >
                       <TrashIcon className="h-4 w-4" />
@@ -186,17 +192,13 @@ export function TaskList() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-8 w-8 opacity-60 group-hover:opacity-100 ${
-                        task.status === "COMPLETED"
-                          ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                          : "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                      }`}
+                      className="h-8 w-8 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
                       onClick={() => toggleStatus(task.id, task.status)}
                     >
                       {task.status === "COMPLETED" ? (
-                        <CheckCircle2Icon className="h-4 w-4" />
+                        <UndoIcon className="h-4 w-4" />
                       ) : (
-                        <CircleDotIcon className="h-4 w-4" />
+                        <CheckIcon className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
