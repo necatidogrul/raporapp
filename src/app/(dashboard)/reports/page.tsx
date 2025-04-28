@@ -63,7 +63,6 @@ export default function ReportsPage() {
         );
 
         const querySnapshot = await getDocs(q);
-        console.log("Bulunan rapor sayısı:", querySnapshot.size);
 
         const reports = querySnapshot.docs.map((doc) => {
           const data = doc.data();

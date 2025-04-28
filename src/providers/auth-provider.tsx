@@ -50,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Kullanıcı yoksa ve korumalı bir sayfadaysa login'e yönlendir
     if (!user) {
-      console.log(`Redirecting to login from: ${pathname}`);
       const redirectPath = `/login?callbackUrl=${encodeURIComponent(pathname)}`;
       router.replace(redirectPath);
     }

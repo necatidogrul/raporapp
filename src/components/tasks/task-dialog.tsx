@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,6 +109,11 @@ export function TaskDialog({
           <DialogTitle>
             {mode === "create" ? "Yeni Görev Oluştur" : "Görevi Düzenle"}
           </DialogTitle>
+          <DialogDescription>
+            {mode === "create"
+              ? "Yeni bir görev oluşturmak için aşağıdaki formu doldurun."
+              : "Görevi düzenlemek için aşağıdaki alanları güncelleyin."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-2">
